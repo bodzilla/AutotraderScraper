@@ -286,14 +286,12 @@ namespace AutotraderScraper
                                     byte[] dbTransmissionTypeBytes = { };
                                     if (dbArticleVersion.TransmissionType != null) dbTransmissionTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.TransmissionType);
                                     byte[] dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString(CultureInfo.CurrentCulture));
-                                    byte[] dbBhpBytes = { };
-                                    if (dbArticleVersion.Bhp != null) dbBhpBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Bhp.ToString());
                                     byte[] dbFuelTypeBytes = { };
                                     if (dbArticleVersion.FuelType != null) dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType);
                                     byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
                                     byte[] dbPriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
                                     byte[] dbBytes = CombineBytes(dbTitleBytes, dbLocationBytes, dbTeaserBytes, dbDescriptionBytes, dbYearBytes, dbBodyTypeBytes, dbMileageBytes,
-                                        dbTransmissionTypeBytes, dbEngineSizeBytes, dbBhpBytes, dbFuelTypeBytes, dbSellerTypeBytes, dbPriceBytes);
+                                        dbTransmissionTypeBytes, dbEngineSizeBytes, dbFuelTypeBytes, dbSellerTypeBytes, dbPriceBytes);
                                     string dbHash = GenerateHash(dbBytes);
 
                                     // Hash fetched verison of this article.
@@ -310,35 +308,52 @@ namespace AutotraderScraper
                                     byte[] transmissionTypeBytes = { };
                                     if (transmissionType != null) transmissionTypeBytes = Encoding.ASCII.GetBytes(transmissionType);
                                     byte[] engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
-                                    byte[] bhpBytes = { };
-                                    if (bhp != null) bhpBytes = Encoding.ASCII.GetBytes(bhp);
                                     byte[] fuelTypeBytes = { };
                                     if (fuelType != null) fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType);
                                     byte[] sellerTypeBytes = Encoding.ASCII.GetBytes(sellerType);
                                     byte[] priceBytes = Encoding.ASCII.GetBytes(price);
                                     byte[] bytes = CombineBytes(titleBytes, locationBytes, teaserBytes, descriptionBytes, yearBytes, bodyTypeBytes, mileageBytes,
-                                        transmissionTypeBytes, engineSizeBytes, bhpBytes, fuelTypeBytes, sellerTypeBytes, priceBytes);
+                                        transmissionTypeBytes, engineSizeBytes, fuelTypeBytes, sellerTypeBytes, priceBytes);
                                     string hash = GenerateHash(bytes);
 
                                     // Compare hashes, skip saving if they are the same as this means we have the latest version.
                                     if (String.Equals(dbHash, hash))
                                     {
-                                        bool update = false;
+                                        bool updateArticle = false;
+                                        bool updateArticleVersion = false;
 
-                                        // Update thumbnail and price tag.
-                                        if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
+                                        // Although we have the latest article version, we may like to update some fields.
+                                        try
                                         {
-                                            update = true;
-                                            dbArticle.Thumbnail = thumbnail;
-                                        }
+                                            // Update article version BHP.
+                                            if (!String.IsNullOrEmpty(bhp) &&
+                                                !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
+                                            {
+                                                updateArticleVersion = true;
+                                                dbArticleVersion.Bhp = int.Parse(bhp);
+                                            }
 
-                                        if (!String.Equals(dbArticle.PriceTag, priceTag))
+                                            // Update article thumbnail.
+                                            if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.Thumbnail = thumbnail;
+                                            }
+
+                                            // Update article price tag.
+                                            if (!String.Equals(dbArticle.PriceTag, priceTag))
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.PriceTag = priceTag;
+                                            }
+
+                                            if (updateArticleVersion) _articleVersionRepo.Update(dbArticleVersion);
+                                            if (updateArticle) _articleRepo.Update(dbArticle);
+                                        }
+                                        catch (Exception ex)
                                         {
-                                            update = true;
-                                            dbArticle.PriceTag = priceTag;
+                                            _log.Error("Could not update existing article/article version.", ex.GetBaseException());
                                         }
-
-                                        if (update) _articleRepo.Update(dbArticle);
 
                                         _log.Info("Skipped duplicate article.");
                                         continue;
