@@ -83,24 +83,17 @@ namespace AutotraderScraper
         {
             string data = null;
 
-            try
+            while (String.IsNullOrEmpty(data))
             {
-                while (String.IsNullOrEmpty(data))
+                try
                 {
-                    try
-                    {
-                        data = DownloadString(url);
-                    }
-                    catch (Exception)
-                    {
-                        Ip = null;
-                        Port = null;
-                    }
+                    data = DownloadString(url);
                 }
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Could not make request for: {url}", ex.GetBaseException());
+                catch (Exception)
+                {
+                    Ip = null;
+                    Port = null;
+                }
             }
             return data;
         }

@@ -72,10 +72,10 @@ namespace AutotraderScraper
                         }
                         catch (Exception)
                         {
+                            _log.Info("Setting article as inactive.");
                             Article inactiveArticle = _articleRepo.Get(x => x.Link == link);
                             inactiveArticle.Active = false;
                             _articleRepo.Update(inactiveArticle);
-                            _log.Info("Setting article as inactive.");
                         }
                     }
                     catch (Exception ex)
