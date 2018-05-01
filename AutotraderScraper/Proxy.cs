@@ -73,7 +73,7 @@ namespace AutotraderScraper
             MatchCollection regMatch = Regex.Matches(data, @"([0-9]+(?:\.[0-9]+){3}:[0-9]+)");
             if (regMatch.Count > 0)
             {
-                IList<string> matches = regMatch.OfType<Match>().Select(m => m.Value).ToList();
+                IList<string> matches = regMatch.OfType<Match>().Select(x => x.Value).ToList();
                 foreach (string match in matches) _proxyList.Push(match);
             }
             else throw new Exception("Proxy list is empty.");
