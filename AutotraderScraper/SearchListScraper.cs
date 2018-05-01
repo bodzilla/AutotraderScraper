@@ -45,7 +45,7 @@ namespace AutotraderScraper
 
         private readonly int _failedArticles;
 
-        public SearchListScraper(string p, string u)
+        public SearchListScraper(string l)
         {
             string carMake = String.Empty;
             string carModel = String.Empty;
@@ -54,7 +54,7 @@ namespace AutotraderScraper
             {
                 // Setting initial variables.
                 int pages; // Set this later.
-                string url = u;
+                string url = l;
                 carMake = ToTitleCase(HttpUtility.ParseQueryString(url).Get("make"));
                 carModel = ToTitleCase(HttpUtility.ParseQueryString(url).Get("model"));
 
@@ -89,8 +89,8 @@ namespace AutotraderScraper
                 }
                 catch (Exception ex)
                 {
-                    _log.Error("Could not get page count from web, setting default from config.", ex.GetBaseException());
-                    pages = int.Parse(p);
+                    _log.Fatal("Could not get page count from web, setting default from config.", ex.GetBaseException());
+                    throw;
                 }
 
                 // Scrape search list by paging through from oldest to latest page.
@@ -434,7 +434,7 @@ namespace AutotraderScraper
             }
             catch (Exception ex)
             {
-                _log.Error(ex.GetBaseException());
+                _log.Fatal("Fatal exception(s) occured in Search List Scraper.", ex.GetBaseException());
             }
             finally
             {

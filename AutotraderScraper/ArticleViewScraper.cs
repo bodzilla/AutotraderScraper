@@ -86,7 +86,7 @@ namespace AutotraderScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal("Could not scrape in Article View Mode.", ex.GetBaseException());
+                _log.Fatal("Fatal exception(s) occured in Article View Scraper.", ex.GetBaseException());
             }
             finally
             {

@@ -34,14 +34,11 @@ namespace AutotraderScraper
                     Log.Info("Retrieving runtime variables..");
 
                     // Get ScrapeList.
-                    string[][] scrapeList = ConfigurationManager.AppSettings.AllKeys
-                        .Where(key => key.Contains("Scrape"))
-                        .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
-                        .ToArray();
+                    IList<string> scrapeList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("Scrape")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
 
                     // Run all search lists.
                     Log.Info("Starting Search List Scraper..");
-                    foreach (string[] list in scrapeList) new SearchListScraper(list[0], list[1]);
+                    foreach (string link in scrapeList) new SearchListScraper(link);
                 }
             }
             catch (Exception ex)
