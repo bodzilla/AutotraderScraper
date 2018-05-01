@@ -39,6 +39,8 @@ namespace AutotraderScraper
                             Thread.Sleep(sleep);
                         }
 
+                        _log.Info($"Scraping view: {link}");
+
                         // Web request response will be read into this variable.
                         string data;
 
@@ -66,15 +68,14 @@ namespace AutotraderScraper
                         // If title doesn't exist, then the article has expired.
                         try
                         {
-                            if (!String.IsNullOrEmpty(doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/h1/span[1]").InnerText)) continue;
+                            new string(doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/h1/span[1]").InnerText.ToCharArray());
+                        }
+                        catch (Exception)
+                        {
                             Article inactiveArticle = _articleRepo.Get(x => x.Link == link);
                             inactiveArticle.Active = false;
                             _articleRepo.Update(inactiveArticle);
                             _log.Info("Setting article as inactive.");
-                        }
-                        catch (Exception ex)
-                        {
-                            _log.Error("Could not read value in article view.", ex.GetBaseException());
                         }
                     }
                     catch (Exception ex)
