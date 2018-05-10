@@ -19,9 +19,8 @@ namespace AutotraderScraper
         private readonly Stack<string> _proxyList = new Stack<string>();
         private readonly bool _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxy"]);
 
-        public string Ip { get; set; }
-
-        public int? Port { get; set; }
+        private string _ip;
+        private int? _port;
 
         public static Proxy Instance
         {
@@ -83,17 +82,28 @@ namespace AutotraderScraper
         {
             string data = null;
 
-            while (String.IsNullOrEmpty(data))
+            if (_useProxy)
             {
-                try
+                if (_proxyList.Count < 1) throw new Exception("Proxy list has been exhuasted with no successes.");
+
+                // Keep trying different proxies till success.
+                while (String.IsNullOrEmpty(data) && _proxyList.Count > 0)
                 {
-                    data = DownloadString(url);
+                    try
+                    {
+                        data = DownloadString(url);
+                    }
+                    catch (Exception)
+                    {
+                        _ip = null;
+                        _port = null;
+                    }
                 }
-                catch (Exception)
-                {
-                    Ip = null;
-                    Port = null;
-                }
+            }
+            else
+            {
+                data = DownloadString(url);
+                if (String.IsNullOrEmpty(data)) throw new Exception("Request returned a null response, IP is possibly blocked.");
             }
             return data;
         }
@@ -110,16 +120,16 @@ namespace AutotraderScraper
 
             if (_useProxy)
             {
-                // If IP and Port are not populated, then use the next in the list.
-                if (String.IsNullOrEmpty(Ip) && Port == null)
+                // If IP and _port are not populated, then use the next in the list.
+                if (String.IsNullOrEmpty(_ip) && _port == null)
                 {
                     string proxy = _proxyList.Pop();
-                    Ip = proxy.Split(':')[0];
-                    Port = int.Parse(proxy.Split(':')[1]);
+                    _ip = proxy.Split(':')[0];
+                    _port = int.Parse(proxy.Split(':')[1]);
                 }
 
-                _log.Info($"Attempting with {Ip}:{Port}");
-                Uri uri = new Uri($"http://{Ip}:{Port}");
+                _log.Info($"Attempting with {_ip}:{_port}");
+                Uri uri = new Uri($"http://{_ip}:{_port}");
                 WebProxy myproxy = new WebProxy(uri, false);
                 request.Proxy = myproxy;
             }

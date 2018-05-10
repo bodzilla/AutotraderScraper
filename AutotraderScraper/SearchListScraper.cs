@@ -89,12 +89,12 @@ namespace AutotraderScraper
                 }
                 catch (Exception ex)
                 {
-                    _log.Fatal("Could not get page count from web, setting default from config.", ex.GetBaseException());
+                    _log.Fatal("Could not get page count from web.", ex.GetBaseException());
                     throw;
                 }
 
-                // Scrape search list by paging through from oldest to latest page.
-                for (int i = pages; i >= 1; i--)
+                // Scrape search list by paging through pageset.
+                for (int i = 1; i <= pages; i++)
                 {
                     try
                     {
@@ -119,7 +119,7 @@ namespace AutotraderScraper
                         }
                         catch (Exception ex)
                         {
-                            _log.Error("Could not get web response for page count.", ex.GetBaseException());
+                            _log.Error($"Could not get web response for url: {currentPage}", ex.GetBaseException());
                             continue;
                         }
 
@@ -135,7 +135,7 @@ namespace AutotraderScraper
                         doc.LoadHtml(data);
                         HtmlNodeCollection results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
 
-                        foreach (HtmlNode result in results.Reverse())
+                        foreach (HtmlNode result in results)
                         {
                             string path = result.XPath;
 
@@ -326,8 +326,7 @@ namespace AutotraderScraper
                                         try
                                         {
                                             // Update article version BHP.
-                                            if (!String.IsNullOrEmpty(bhp) &&
-                                                !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
+                                            if (!String.IsNullOrEmpty(bhp) && !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
                                             {
                                                 updateArticleVersion = true;
                                                 dbArticleVersion.Bhp = int.Parse(bhp);
