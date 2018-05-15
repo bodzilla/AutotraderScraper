@@ -55,9 +55,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutotraderScraperContext.cs" />
-    <Compile Include="Migrations\201805150935040_InitialCreate.cs" />
-    <Compile Include="Migrations\201805150935040_InitialCreate.Designer.cs">
-      <DependentUpon>201805150935040_InitialCreate.cs</DependentUpon>
+    <Compile Include="Migrations\201804271009271_InitialCreate.cs" />
+    <Compile Include="Migrations\201804271009271_InitialCreate.Designer.cs">
+      <DependentUpon>201804271009271_InitialCreate.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -72,8 +72,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201805150935040_InitialCreate.resx">
-      <DependentUpon>201805150935040_InitialCreate.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201804271009271_InitialCreate.resx">
+      <DependentUpon>201804271009271_InitialCreate.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
