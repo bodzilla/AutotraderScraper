@@ -17,7 +17,7 @@ using log4net;
 
 namespace AutotraderScraper
 {
-    public class SearchListScraper
+    internal class SearchListScraper
     {
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

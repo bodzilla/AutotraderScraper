@@ -40,14 +40,14 @@ namespace AutotraderScraper.Repository
             _repository.Create(articleVersions);
         }
 
-        public void Update(params ArticleVersion[] articles)
+        public void Update(params ArticleVersion[] articleVersions)
         {
-            _repository.Update(articles);
+            _repository.Update(articleVersions);
         }
 
-        public void Delete(params ArticleVersion[] articles)
+        public void Delete(params ArticleVersion[] articleVersions)
         {
-            _repository.Delete(articles);
+            _repository.Delete(articleVersions);
         }
     }
 }

@@ -24,13 +24,5 @@ namespace AutotraderScraper.DataAccess
             modelBuilder.Entity<Article>().ToTable("Article");
             modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersion");
         }
-
-        public DbSet<CarMake> CarMakes { get; set; }
-
-        public DbSet<CarModel> CarModels { get; set; }
-
-        public DbSet<Article> Articles { get; set; }
-
-        public DbSet<ArticleVersion> ArticleVersions { get; set; }
     }
 }

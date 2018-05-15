@@ -15,7 +15,7 @@ namespace AutotraderScraper.Repository.Interfaces
 
         bool Exists(Func<T, bool> where);
 
-        void Create(params T[] users);
+        void Create(params T[] items);
 
         void Update(params T[] items);
 

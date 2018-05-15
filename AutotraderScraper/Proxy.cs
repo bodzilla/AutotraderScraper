@@ -10,7 +10,7 @@ using log4net;
 
 namespace AutotraderScraper
 {
-    public sealed class Proxy
+    internal sealed class Proxy
     {
         private static volatile Proxy _instance;
         private static readonly object Sync = new Object();

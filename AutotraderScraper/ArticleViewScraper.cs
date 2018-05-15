@@ -10,7 +10,7 @@ using log4net;
 
 namespace AutotraderScraper
 {
-    public class ArticleViewScraper
+    internal class ArticleViewScraper
     {
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
