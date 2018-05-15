@@ -17,7 +17,6 @@ namespace AutotraderScraper.DataAccess
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<AutotraderScraperContext, Configuration>());
-            Database.SetInitializer(new CreateDatabaseIfNotExists<AutotraderScraperContext>());
 
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
 
