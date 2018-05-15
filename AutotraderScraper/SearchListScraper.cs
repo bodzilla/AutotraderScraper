@@ -86,6 +86,7 @@ namespace AutotraderScraper
                     doc.LoadHtml(data);
                     string pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
                     pages = int.Parse(pagesNode);
+                    _log.Info($"{pages} pages found.");
                 }
                 catch (Exception ex)
                 {
