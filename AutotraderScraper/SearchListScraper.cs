@@ -27,6 +27,7 @@ namespace AutotraderScraper
         private readonly ArticleRepository _articleRepo = new ArticleRepository();
         private readonly ArticleVersionRepository _articleVersionRepo = new ArticleVersionRepository();
 
+        private static readonly int PageNumberRetries = int.Parse(ConfigurationManager.AppSettings["PageNumberRetries"]);
         private readonly bool _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
         private readonly IList<string> _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
         private readonly IList<string> _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
@@ -53,7 +54,7 @@ namespace AutotraderScraper
             try
             {
                 // Setting initial variables.
-                int pages; // Set this later.
+                int? pages = null; // Set this later.
                 string url = l;
                 carMake = ToTitleCase(HttpUtility.ParseQueryString(url).Get("make"));
                 carModel = ToTitleCase(HttpUtility.ParseQueryString(url).Get("model"));
@@ -78,15 +79,33 @@ namespace AutotraderScraper
                 {
                     _log.Info("Retrieving page count from web..");
 
-                    // Web request response will be read into this variable.
-                    string data = _proxy.MakeRequest(url);
+                    // Do retries on page count as this may not appear on some calls.
+                    int retryCount = 0;
+                    while (retryCount <= PageNumberRetries)
+                    {
+                        // Web request response will be read into this variable.
+                        string data = _proxy.MakeRequest(url);
 
-                    // Parse response as HTML document.
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(data);
-                    string pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
-                    pages = int.Parse(pagesNode);
-                    _log.Info($"{pages} pages found.");
+                        // Parse response as HTML document.
+                        HtmlDocument doc = new HtmlDocument();
+                        doc.LoadHtml(data);
+                        string pagesNode;
+
+                        try
+                        {
+                            pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
+                        }
+                        catch (Exception)
+                        {
+                            if (retryCount == PageNumberRetries) throw new Exception("Pages node returns null.");
+                            retryCount++;
+                            continue;
+                        }
+
+                        pages = int.Parse(pagesNode);
+                        _log.Info($"{pages} pages found.");
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -171,6 +190,7 @@ namespace AutotraderScraper
                                 string engineSize = null;
                                 string bhp = null;
                                 string fuelType = null;
+                                string updates = null;
 
                                 try
                                 {
@@ -358,6 +378,14 @@ namespace AutotraderScraper
                                         _log.Info("Skipped duplicate article.");
                                         continue;
                                     }
+
+                                    // Check if price changed.
+                                    if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
+                                    if (int.Parse(price) < dbArticleVersion.Price) updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
+
+                                    // Check if mileage changed.
+                                    if (int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
                                 }
 
                                 // Init vars for db save.
@@ -399,6 +427,7 @@ namespace AutotraderScraper
                                 articleVersion.FuelType = fuelType;
                                 articleVersion.SellerType = sellerType;
                                 articleVersion.Price = int.Parse(price);
+                                articleVersion.Updates = updates;
                                 _articleVersionRepo.Create(articleVersion);
 
                                 // Add to hash sets.
