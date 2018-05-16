@@ -6,7 +6,8 @@ namespace AutotraderScraper.DataAccess.Migrations
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = false;
+            ContextKey = typeof(AutotraderScraperContext).FullName;
+            AutomaticMigrationsEnabled = true;
         }
 
         protected override void Seed(AutotraderScraperContext context)
