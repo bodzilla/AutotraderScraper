@@ -210,6 +210,21 @@ namespace AutotraderScraper
 
                                     foreach (string attribute in attributes)
                                     {
+                                        // Sometimes the year is missing from original field as it's within attributes.
+                                        if (String.IsNullOrEmpty(year))
+                                        {
+                                            try
+                                            {
+                                                int number = int.Parse(_removeNonNumeric.Replace(attribute.Substring(0, 4), String.Empty));
+                                                year = number.ToString();
+                                                continue;
+                                            }
+                                            catch (Exception)
+                                            {
+                                                year = null;
+                                            }
+                                        }
+
                                         if (attribute.Contains("bhp"))
                                         {
                                             bhp = attribute;
@@ -457,7 +472,6 @@ namespace AutotraderScraper
                     {
                         _failedArticles++;
                         _log.Error($"Could not get or process scrape for page {pages}.", ex.GetBaseException());
-                        throw;
                     }
                 }
             }
