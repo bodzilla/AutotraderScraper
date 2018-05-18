@@ -401,6 +401,9 @@ namespace AutotraderScraper
                                     // Check if mileage changed.
                                     if (int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
                                     if (int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+
+                                    // Check if thumbnail changed.
+                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
                                 }
 
                                 // Init vars for db save.
@@ -424,6 +427,7 @@ namespace AutotraderScraper
                                 {
                                     // Existing article.
                                     articleState = "existing";
+                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) article.Thumbnail = thumbnail;
                                     articleVersion.ArticleId = dbArticle.Id; // Link existing article.
                                     articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.
                                 }
