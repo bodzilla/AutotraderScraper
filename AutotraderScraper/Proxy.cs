@@ -120,25 +120,25 @@ namespace AutotraderScraper
 
             if (_useProxy)
             {
-                // If IP and _port are not populated, then use the next in the list.
+                // If IP and port are not populated, then use the next in the list.
                 if (String.IsNullOrEmpty(_ip) && _port == null)
                 {
-                    string proxy = _proxyList.Pop();
-                    _ip = proxy.Split(':')[0];
-                    _port = int.Parse(proxy.Split(':')[1]);
+                    string ipAndPort = _proxyList.Pop();
+                    _ip = ipAndPort.Split(':')[0];
+                    _port = int.Parse(ipAndPort.Split(':')[1]);
                 }
 
                 _log.Info($"Attempting with {_ip}:{_port}");
                 Uri uri = new Uri($"http://{_ip}:{_port}");
-                WebProxy myproxy = new WebProxy(uri, false);
-                request.Proxy = myproxy;
+                WebProxy proxy = new WebProxy(uri, false);
+                request.Proxy = proxy;
             }
 
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             {
                 using (Stream stream = response.GetResponseStream())
                 {
-                    using (StreamReader reader = new StreamReader(stream))
+                    using (StreamReader reader = new StreamReader(stream ?? throw new InvalidOperationException("Stream returns null.")))
                     {
                         data = reader.ReadToEnd();
                     }
