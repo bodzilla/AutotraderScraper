@@ -71,8 +71,8 @@ namespace AutotraderScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active));
-                _articleLinksList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
+                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
 
                 // First get total number of pages.
                 try
@@ -270,19 +270,31 @@ namespace AutotraderScraper
                                 }
 
                                 // Cleanse results.
-                                title = WebUtility.HtmlDecode(title);
-                                teaser = WebUtility.HtmlDecode(teaser);
-                                description = WebUtility.HtmlDecode(description);
-                                if (thumbnail.Equals(_noImageLink)) thumbnail = null;
-                                location = ToTitleCase(location);
-                                year = _removeNonNumeric.Replace(year, String.Empty);
-                                if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
-                                engineSize = _removeLs.Replace(engineSize, String.Empty);
-                                if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100) engineSize = $"{Math.Round(double.Parse(engineSize))}";
-                                if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
-                                sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
-                                if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
-                                price = _removeNonNumeric.Replace(price, String.Empty);
+                                try
+                                {
+                                    title = WebUtility.HtmlDecode(title);
+                                    teaser = WebUtility.HtmlDecode(teaser);
+                                    description = WebUtility.HtmlDecode(description);
+                                    if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
+                                    location = ToTitleCase(location);
+                                    year = _removeNonNumeric.Replace(year, String.Empty);
+                                    if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
+                                    if (engineSize != null)
+                                    {
+                                        engineSize = _removeLs.Replace(engineSize, String.Empty);
+                                        if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100)
+                                            engineSize = $"{Math.Round(double.Parse(engineSize))}";
+                                    }
+                                    if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
+                                    sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
+                                    if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
+                                    price = _removeNonNumeric.Replace(price, String.Empty);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _log.Error("Could not cleanse field.", ex.GetBaseException());
+                                    continue;
+                                }
 
                                 // De-duplication.
                                 // First, check if article link exists in db.
@@ -321,7 +333,8 @@ namespace AutotraderScraper
                                     if (dbArticleVersion.Mileage != null) dbMileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString());
                                     byte[] dbTransmissionTypeBytes = { };
                                     if (dbArticleVersion.TransmissionType != null) dbTransmissionTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.TransmissionType);
-                                    byte[] dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString(CultureInfo.CurrentCulture));
+                                    byte[] dbEngineSizeBytes = { };
+                                    if (dbArticleVersion.EngineSize != null) dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString());
                                     byte[] dbFuelTypeBytes = { };
                                     if (dbArticleVersion.FuelType != null) dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType);
                                     byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
@@ -343,7 +356,8 @@ namespace AutotraderScraper
                                     if (mileage != null) mileageBytes = Encoding.ASCII.GetBytes(mileage);
                                     byte[] transmissionTypeBytes = { };
                                     if (transmissionType != null) transmissionTypeBytes = Encoding.ASCII.GetBytes(transmissionType);
-                                    byte[] engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
+                                    byte[] engineSizeBytes = { };
+                                    if (engineSize != null) engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
                                     byte[] fuelTypeBytes = { };
                                     if (fuelType != null) fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType);
                                     byte[] sellerTypeBytes = Encoding.ASCII.GetBytes(sellerType);
@@ -399,8 +413,9 @@ namespace AutotraderScraper
                                     if (int.Parse(price) < dbArticleVersion.Price) updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
 
                                     // Check if mileage changed.
-                                    if (int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
-                                    if (int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && dbArticleVersion.Mileage == null) updates += "Mileage newly added. ";
+                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
 
                                     // Check if thumbnail changed.
                                     if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
@@ -441,7 +456,7 @@ namespace AutotraderScraper
                                 articleVersion.BodyType = bodyType;
                                 articleVersion.Mileage = mileage != null ? int.Parse(mileage) : (int?)null;
                                 articleVersion.TransmissionType = transmissionType;
-                                articleVersion.EngineSize = double.Parse(engineSize);
+                                articleVersion.EngineSize = engineSize != null ? double.Parse(engineSize) : (double?)null;
                                 articleVersion.Bhp = bhp != null ? int.Parse(bhp) : (int?)null;
                                 articleVersion.FuelType = fuelType;
                                 articleVersion.SellerType = sellerType;

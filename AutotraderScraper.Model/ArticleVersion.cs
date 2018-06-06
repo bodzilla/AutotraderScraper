@@ -28,7 +28,7 @@ namespace AutotraderScraper.Model
 
         public string TransmissionType { get; set; }
 
-        public double EngineSize { get; set; }
+        public double? EngineSize { get; set; }
 
         public int? Bhp { get; set; }
 

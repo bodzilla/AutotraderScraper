@@ -26,7 +26,7 @@ namespace AutotraderScraper
                     Log.Info("Starting Back Burner Mode..");
 
                     // Only get active articles to reduce time and bandwidth usage of Article scraper.
-                    foreach (string link in new ArticleRepository().GetAll().Where(x => x.Active).OrderByDescending(x => x.DateAdded).Select(x => x.Link)) ArticleViewStack.Push(link);
+                    foreach (string link in new ArticleRepository().GetList(x => x.Active).OrderByDescending(x => x.DateAdded).Select(x => x.Link)) ArticleViewStack.Push(link);
                     new ArticleViewScraper(ArticleViewStack);
                 }
                 else
