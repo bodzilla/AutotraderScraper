@@ -31,8 +31,7 @@ namespace AutotraderScraper.Repository
             return list;
         }
 
-        public IList<T> GetList(Func<T, bool> where,
-             params Expression<Func<T, object>>[] navigationProperties)
+        public IList<T> GetList(Func<T, bool> where, params Expression<Func<T, object>>[] navigationProperties)
         {
             IList<T> list;
             using (var context = new AutotraderScraperContext())

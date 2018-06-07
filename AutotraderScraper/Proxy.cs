@@ -28,7 +28,7 @@ namespace AutotraderScraper
             {
                 // Implement Singleton.
                 if (_instance != null) return _instance;
-                lock (Sync) if (_instance == null) _instance = new Proxy();
+                lock (Sync) _instance = new Proxy();
                 return _instance;
             }
         }
