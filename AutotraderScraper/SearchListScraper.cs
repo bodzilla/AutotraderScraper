@@ -27,7 +27,6 @@ namespace AutotraderScraper
         private readonly ArticleRepository _articleRepo = new ArticleRepository();
         private readonly ArticleVersionRepository _articleVersionRepo = new ArticleVersionRepository();
 
-        private static readonly int PageNumberRetries = int.Parse(ConfigurationManager.AppSettings["PageNumberRetries"]);
         private readonly bool _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
         private readonly IList<string> _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
         private readonly IList<string> _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
@@ -46,7 +45,7 @@ namespace AutotraderScraper
 
         private readonly int _failedArticles;
 
-        public SearchListScraper(string l)
+        public SearchListScraper(int pages, string url)
         {
             string carMake = String.Empty;
             string carModel = String.Empty;
@@ -54,8 +53,6 @@ namespace AutotraderScraper
             try
             {
                 // Setting initial variables.
-                int? pages = null; // Set this later.
-                string url = l;
                 carMake = ToTitleCase(HttpUtility.ParseQueryString(url).Get("make"));
                 carModel = ToTitleCase(HttpUtility.ParseQueryString(url).Get("model"));
 
@@ -74,37 +71,25 @@ namespace AutotraderScraper
                 _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
                 _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
 
-                // First get total number of pages.
+                // First get total number of pages from web.
                 try
                 {
                     _log.Info("Retrieving page count from web..");
+                    string data = _proxy.MakeRequest(url);
 
-                    // Do retries on page count as this may not appear on some calls.
-                    int retryCount = 0;
-                    while (retryCount <= PageNumberRetries)
+                    // Parse response as HTML document.
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(data);
+
+                    try
                     {
-                        // Web request response will be read into this variable.
-                        string data = _proxy.MakeRequest(url);
-
-                        // Parse response as HTML document.
-                        HtmlDocument doc = new HtmlDocument();
-                        doc.LoadHtml(data);
-                        string pagesNode;
-
-                        try
-                        {
-                            pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
-                        }
-                        catch (Exception)
-                        {
-                            if (retryCount == PageNumberRetries) throw new Exception("Pages node returns null.");
-                            retryCount++;
-                            continue;
-                        }
-
+                        string pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
                         pages = int.Parse(pagesNode);
                         _log.Info($"{pages} pages found.");
-                        break;
+                    }
+                    catch (Exception)
+                    {
+                        _log.Info($"Could not get page count from web, using default: {pages}");
                     }
                 }
                 catch (Exception ex)
@@ -496,7 +481,7 @@ namespace AutotraderScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal("Fatal exception(s) occured in Search List Scraper.", ex.GetBaseException());
+                _log.Fatal($"Fatal exception(s) occured in Search List Scraper for {carMake} {carModel}.", ex.GetBaseException());
             }
             finally
             {

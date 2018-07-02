@@ -25,7 +25,7 @@ namespace AutotraderScraper
                 {
                     Log.Info("Starting Back Burner Mode..");
 
-                    // Only get active articles to reduce time and bandwidth usage of Article scraper.
+                    // Only get active articles.
                     foreach (string link in new ArticleRepository().GetList(x => x.Active).OrderByDescending(x => x.DateAdded).Select(x => x.Link)) ArticleViewStack.Push(link);
                     new ArticleViewScraper(ArticleViewStack);
                 }
@@ -33,12 +33,15 @@ namespace AutotraderScraper
                 {
                     Log.Info("Retrieving runtime variables..");
 
-                    // Get ScrapeList.
-                    IList<string> scrapeList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("Scrape")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
+                    // Get scrape lists with respective page counts.
+                    string[][] scrapeListArray = ConfigurationManager.AppSettings.AllKeys
+                        .Where(key => key.Contains("Scrape"))
+                        .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
+                        .ToArray();
 
                     // Run all search lists.
                     Log.Info("Starting Search List Scraper..");
-                    foreach (string link in scrapeList) new SearchListScraper(link);
+                    foreach (string[] list in scrapeListArray) new SearchListScraper(int.Parse(list[0]), list[1]);
                 }
             }
             catch (Exception ex)
