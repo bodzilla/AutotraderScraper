@@ -47,7 +47,7 @@ namespace AutotraderScraper
             catch (Exception ex)
             {
                 _failed = true;
-                Log.Fatal("Could not run AutotraderScraper.", ex.GetBaseException());
+                Log.Fatal("Could not run AutotraderScraper.", ex);
             }
             finally
             {

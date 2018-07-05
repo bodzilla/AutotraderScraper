@@ -50,7 +50,7 @@ namespace AutotraderScraper
                         }
                         catch (Exception ex)
                         {
-                            _log.Error("Could not get web response for article view.", ex.GetBaseException());
+                            _log.Error("Could not get web response for article view.", ex);
                             continue;
                         }
 
@@ -80,13 +80,13 @@ namespace AutotraderScraper
                     }
                     catch (Exception ex)
                     {
-                        _log.Error($"Could not scrape link: {link}", ex.GetBaseException());
+                        _log.Error($"Could not scrape link: {link}", ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _log.Fatal("Fatal exception(s) occured in Article View Scraper.", ex.GetBaseException());
+                _log.Fatal("Fatal exception(s) occured in Article View Scraper.", ex);
             }
             finally
             {

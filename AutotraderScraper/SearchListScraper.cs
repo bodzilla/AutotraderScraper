@@ -94,7 +94,7 @@ namespace AutotraderScraper
                 }
                 catch (Exception ex)
                 {
-                    _log.Fatal("Could not get page count from web.", ex.GetBaseException());
+                    _log.Fatal("Could not get page count from web.", ex);
                     throw;
                 }
 
@@ -115,16 +115,26 @@ namespace AutotraderScraper
                         string currentPage = $"{url}&page={i}";
                         _log.Info($"Scraping page: {currentPage}");
 
-                        // Web request response will be read into this variable.
-                        string data;
+                        // Data notes.
+                        string data = null;
+                        HtmlNodeCollection results = null;
 
                         try
                         {
-                            data = _proxy.MakeRequest(currentPage);
+                            // Ensure results are populated after web request.
+                            while (results == null)
+                            {
+                                data = _proxy.MakeRequest(currentPage);
+
+                                // Parse response as HTML document.
+                                HtmlDocument doc = new HtmlDocument();
+                                doc.LoadHtml(data);
+                                results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
+                            }
                         }
                         catch (Exception ex)
                         {
-                            _log.Error($"Could not get web response for url: {currentPage}", ex.GetBaseException());
+                            _log.Error($"Could not get web response for url: {currentPage}", ex);
                             continue;
                         }
 
@@ -134,11 +144,6 @@ namespace AutotraderScraper
                             _log.Error("Skipping scrape page due to null content.");
                             continue;
                         }
-
-                        // Parse response as HTML document.
-                        HtmlDocument doc = new HtmlDocument();
-                        doc.LoadHtml(data);
-                        HtmlNodeCollection results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
 
                         foreach (HtmlNode result in results)
                         {
@@ -250,7 +255,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not scrape field(s).", ex.GetBaseException());
+                                    _log.Error("Could not scrape field(s).", ex);
                                     continue;
                                 }
 
@@ -277,7 +282,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not cleanse field.", ex.GetBaseException());
+                                    _log.Error("Could not cleanse field.", ex);
                                     continue;
                                 }
 
@@ -386,7 +391,7 @@ namespace AutotraderScraper
                                         }
                                         catch (Exception ex)
                                         {
-                                            _log.Error("Could not update existing article/article version.", ex.GetBaseException());
+                                            _log.Error("Could not update existing article/article version.", ex);
                                         }
 
                                         _log.Info("Skipped duplicate article.");
@@ -468,20 +473,20 @@ namespace AutotraderScraper
                             }
                             catch (Exception ex)
                             {
-                                _log.Error("Could not process and save article/article version.", ex.GetBaseException());
+                                _log.Error("Could not process and save article/article version.", ex);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         _failedArticles++;
-                        _log.Error($"Could not get or process scrape for page {pages}.", ex.GetBaseException());
+                        _log.Error($"Could not get or process scrape for page {pages}.", ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Fatal exception(s) occured in Search List Scraper for {carMake} {carModel}.", ex.GetBaseException());
+                _log.Fatal($"Fatal exception(s) occured in Search List Scraper for {carMake} {carModel}.", ex);
             }
             finally
             {

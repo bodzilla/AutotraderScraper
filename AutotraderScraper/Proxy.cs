@@ -65,7 +65,7 @@ namespace AutotraderScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal("Could not get proxy details.", ex.GetBaseException());
+                _log.Fatal("Could not get proxy details.", ex);
                 throw;
             }
 
