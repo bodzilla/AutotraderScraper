@@ -151,23 +151,10 @@ namespace AutotraderScraper
 
                             try
                             {
-                                string price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
-                                if (String.IsNullOrEmpty(price)) continue; // If price doesn't exist, this article has expired.
-
-                                // Get article values, split at '?' to remove excess trailing from url.
-                                string link = result.SelectSingleNode($"{path}/section[1]/div/h2/a").GetAttributeValue("href", null).Split('?')[0];
-
-                                // Add domain name to link value.
-                                link = link.Insert(0, "https://www.autotrader.co.uk");
-
+                                string price;
+                                string link;
                                 string location;
-                                try { location = result.SelectSingleNode($"{path}/section[1]/div/div/div[2]/span").InnerText.Trim(); }
-                                catch (Exception) { location = ConfigurationManager.AppSettings["DefaultLocation"]; }
-
                                 string priceTag;
-                                try { priceTag = result.SelectSingleNode($"{path}/section[2]/div[1]/span[1]").InnerText.Trim(); }
-                                catch (Exception) { priceTag = null; }
-
                                 string thumbnail;
                                 string title;
                                 string teaser;
@@ -184,78 +171,115 @@ namespace AutotraderScraper
 
                                 try
                                 {
-                                    thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
-                                    title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
-                                    teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
-                                        ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
-                                    description = result.SelectSingleNode($"{path}/section[1]/div/p[2]").InnerText.Trim();
-                                    sellerType = result.SelectSingleNode($"{path}/section[1]/div/div/div[1]").InnerText.Trim();
-                                    year = result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[1]").InnerText.Substring(0, 4).Trim();
+                                    price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                    if (String.IsNullOrEmpty(price)) continue; // If price doesn't exist, this article has expired.
 
-                                    IList<string> attributes = new List<string>();
-                                    int attributeCount = result.SelectNodes($"{path}/section[1]/div/ul[1]/li").Count;
+                                    // Get article values, split at '?' to remove excess trailing from url.
+                                    link = result.SelectSingleNode($"{path}/section[1]/div/h2/a").GetAttributeValue("href", null).Split('?')[0];
 
-                                    // First [li] object is the year, so start from second.
-                                    for (int j = 2; j <= attributeCount; j++) attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
+                                    // Add domain name to link value.
+                                    link = link.Insert(0, "https://www.autotrader.co.uk");
 
-                                    foreach (string attribute in attributes)
+                                    try
                                     {
-                                        // Sometimes the year is missing from original field as it's within attributes.
-                                        if (String.IsNullOrEmpty(year))
+                                        location = result.SelectSingleNode($"{path}/section[1]/div/div/div[2]/span").InnerText.Trim();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        location = ConfigurationManager.AppSettings["DefaultLocation"];
+                                    }
+
+                                    try
+                                    {
+                                        priceTag = result.SelectSingleNode($"{path}/section[2]/div[1]/span[1]").InnerText.Trim();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        priceTag = null;
+                                    }
+
+                                    try
+                                    {
+                                        thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
+                                        title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
+                                        teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
+                                            ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
+                                        description = result.SelectSingleNode($"{path}/section[1]/div/p[2]").InnerText.Trim();
+                                        sellerType = result.SelectSingleNode($"{path}/section[1]/div/div/div[1]").InnerText.Trim();
+                                        year = result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[1]").InnerText.Substring(0, 4).Trim();
+
+                                        IList<string> attributes = new List<string>();
+                                        int attributeCount = result.SelectNodes($"{path}/section[1]/div/ul[1]/li").Count;
+
+                                        // First [li] object is the year, so start from second.
+                                        for (int j = 2; j <= attributeCount; j++)
+                                            attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
+
+                                        foreach (string attribute in attributes)
                                         {
-                                            try
+                                            // Sometimes the year is missing from original field as it's within attributes.
+                                            if (String.IsNullOrEmpty(year))
                                             {
-                                                int number = int.Parse(_removeNonNumeric.Replace(attribute.Substring(0, 4), String.Empty));
-                                                year = number.ToString();
+                                                try
+                                                {
+                                                    int number = int.Parse(_removeNonNumeric.Replace(attribute.Substring(0, 4), String.Empty));
+                                                    year = number.ToString();
+                                                    continue;
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    year = null;
+                                                }
+                                            }
+
+                                            if (attribute.Contains("bhp"))
+                                            {
+                                                bhp = attribute;
                                                 continue;
                                             }
-                                            catch (Exception)
+
+                                            if (attribute.Contains("mile"))
                                             {
-                                                year = null;
+                                                mileage = attribute;
+                                                continue;
                                             }
-                                        }
 
-                                        if (attribute.Contains("bhp"))
-                                        {
-                                            bhp = attribute;
-                                            continue;
-                                        }
+                                            if (_matchLs.IsMatch(attribute))
+                                            {
+                                                engineSize = attribute;
+                                                continue;
+                                            }
 
-                                        if (attribute.Contains("mile"))
-                                        {
-                                            mileage = attribute;
-                                            continue;
-                                        }
+                                            if (_bodyTypesList.Any(x => x.Equals(attribute)))
+                                            {
+                                                bodyType = attribute;
+                                                continue;
+                                            }
 
-                                        if (_matchLs.IsMatch(attribute))
-                                        {
-                                            engineSize = attribute;
-                                            continue;
-                                        }
+                                            if (_fuelTypesList.Any(x => x.Equals(attribute)))
+                                            {
+                                                fuelType = attribute;
+                                                continue;
+                                            }
 
-                                        if (_bodyTypesList.Any(x => x.Equals(attribute)))
-                                        {
-                                            bodyType = attribute;
-                                            continue;
-                                        }
+                                            if (_transmissionTypesList.Any(x => x.Equals(attribute)))
+                                            {
+                                                transmissionType = attribute;
+                                                continue;
+                                            }
 
-                                        if (_fuelTypesList.Any(x => x.Equals(attribute)))
-                                        {
-                                            fuelType = attribute;
-                                            continue;
+                                            throw new Exception($"No attribute matches found for value: {attribute}");
                                         }
-
-                                        if (_transmissionTypesList.Any(x => x.Equals(attribute)))
-                                        {
-                                            transmissionType = attribute;
-                                            continue;
-                                        }
-                                        throw new Exception($"No attribute matches found for value: {attribute}");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _log.Error("Could not scrape attribute field(s).", ex);
+                                        continue;
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not scrape field(s).", ex);
+                                    _log.Error("Could not scrape article field(s).", ex);
                                     continue;
                                 }
 
@@ -282,7 +306,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not cleanse field.", ex);
+                                    _log.Error("Could not cleanse field(s).", ex);
                                     continue;
                                 }
 
