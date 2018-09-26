@@ -302,7 +302,7 @@ namespace AutotraderScraper
                                     }
                                     catch (Exception)
                                     {
-                                        _log.Error("Could not get dbArticle/dbArticleVersion, removing from db.");
+                                        _log.Error($"Could not get dbArticle.Id: {dbArticle.Id}/dbArticleVersion.Id: {dbArticleVersion.Id}, removing from db.");
                                         if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
                                         if (dbArticle != null) _articleRepo.Delete(dbArticle);
                                         if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
