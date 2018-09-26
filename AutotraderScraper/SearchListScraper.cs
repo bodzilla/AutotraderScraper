@@ -148,192 +148,191 @@ namespace AutotraderScraper
                         foreach (HtmlNode result in results)
                         {
                             string path = result.XPath;
+                            string price;
+                            string link;
+                            string location;
+                            string priceTag;
+                            string thumbnail;
+                            string title;
+                            string teaser;
+                            string description;
+                            string year;
+                            string sellerType;
+                            string bodyType = null;
+                            string mileage = null;
+                            string transmissionType = null;
+                            string engineSize = null;
+                            string bhp = null;
+                            string fuelType = null;
+                            string updates = null;
 
                             try
                             {
-                                string price;
-                                string link;
-                                string location;
-                                string priceTag;
-                                string thumbnail;
-                                string title;
-                                string teaser;
-                                string description;
-                                string year;
-                                string sellerType;
-                                string bodyType = null;
-                                string mileage = null;
-                                string transmissionType = null;
-                                string engineSize = null;
-                                string bhp = null;
-                                string fuelType = null;
-                                string updates = null;
+                                price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                if (String.IsNullOrEmpty(price)) continue; // If price doesn't exist, this article has expired.
+
+                                // Get article values, split at '?' to remove excess trailing from url.
+                                link = result.SelectSingleNode($"{path}/section[1]/div/h2/a").GetAttributeValue("href", null).Split('?')[0];
+
+                                // Add domain name to link value.
+                                link = link.Insert(0, "https://www.autotrader.co.uk");
 
                                 try
                                 {
-                                    price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
-                                    if (String.IsNullOrEmpty(price)) continue; // If price doesn't exist, this article has expired.
+                                    location = result.SelectSingleNode($"{path}/section[1]/div/div/div[2]/span").InnerText.Trim();
+                                }
+                                catch (Exception)
+                                {
+                                    location = ConfigurationManager.AppSettings["DefaultLocation"];
+                                }
 
-                                    // Get article values, split at '?' to remove excess trailing from url.
-                                    link = result.SelectSingleNode($"{path}/section[1]/div/h2/a").GetAttributeValue("href", null).Split('?')[0];
+                                try
+                                {
+                                    priceTag = result.SelectSingleNode($"{path}/section[2]/div[1]/span[1]").InnerText.Trim();
+                                }
+                                catch (Exception)
+                                {
+                                    priceTag = null;
+                                }
 
-                                    // Add domain name to link value.
-                                    link = link.Insert(0, "https://www.autotrader.co.uk");
+                                try
+                                {
+                                    thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
+                                    title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
+                                    teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
+                                        ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
+                                    description = result.SelectSingleNode($"{path}/section[1]/div/p[2]").InnerText.Trim();
+                                    sellerType = result.SelectSingleNode($"{path}/section[1]/div/div/div[1]").InnerText.Trim();
+                                    year = result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[1]").InnerText.Substring(0, 4).Trim();
 
-                                    try
+                                    IList<string> attributes = new List<string>();
+                                    int attributeCount = result.SelectNodes($"{path}/section[1]/div/ul[1]/li").Count;
+
+                                    // First [li] object is the year, so start from second.
+                                    for (int j = 2; j <= attributeCount; j++)
+                                        attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
+
+                                    foreach (string attribute in attributes)
                                     {
-                                        location = result.SelectSingleNode($"{path}/section[1]/div/div/div[2]/span").InnerText.Trim();
-                                    }
-                                    catch (Exception)
-                                    {
-                                        location = ConfigurationManager.AppSettings["DefaultLocation"];
-                                    }
-
-                                    try
-                                    {
-                                        priceTag = result.SelectSingleNode($"{path}/section[2]/div[1]/span[1]").InnerText.Trim();
-                                    }
-                                    catch (Exception)
-                                    {
-                                        priceTag = null;
-                                    }
-
-                                    try
-                                    {
-                                        thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
-                                        title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
-                                        teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
-                                            ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
-                                        description = result.SelectSingleNode($"{path}/section[1]/div/p[2]").InnerText.Trim();
-                                        sellerType = result.SelectSingleNode($"{path}/section[1]/div/div/div[1]").InnerText.Trim();
-                                        year = result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[1]").InnerText.Substring(0, 4).Trim();
-
-                                        IList<string> attributes = new List<string>();
-                                        int attributeCount = result.SelectNodes($"{path}/section[1]/div/ul[1]/li").Count;
-
-                                        // First [li] object is the year, so start from second.
-                                        for (int j = 2; j <= attributeCount; j++)
-                                            attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
-
-                                        foreach (string attribute in attributes)
+                                        // Sometimes the year is missing from original field as it's within attributes.
+                                        if (String.IsNullOrEmpty(year))
                                         {
-                                            // Sometimes the year is missing from original field as it's within attributes.
-                                            if (String.IsNullOrEmpty(year))
+                                            try
                                             {
-                                                try
-                                                {
-                                                    int number = int.Parse(_removeNonNumeric.Replace(attribute.Substring(0, 4), String.Empty));
-                                                    year = number.ToString();
-                                                    continue;
-                                                }
-                                                catch (Exception)
-                                                {
-                                                    year = null;
-                                                }
-                                            }
-
-                                            if (attribute.Contains("bhp"))
-                                            {
-                                                bhp = attribute;
+                                                int number = int.Parse(_removeNonNumeric.Replace(attribute.Substring(0, 4), String.Empty));
+                                                year = number.ToString();
                                                 continue;
                                             }
-
-                                            if (attribute.Contains("mile"))
+                                            catch (Exception)
                                             {
-                                                mileage = attribute;
-                                                continue;
+                                                year = null;
                                             }
-
-                                            if (_matchLs.IsMatch(attribute))
-                                            {
-                                                engineSize = attribute;
-                                                continue;
-                                            }
-
-                                            if (_bodyTypesList.Any(x => x.Equals(attribute)))
-                                            {
-                                                bodyType = attribute;
-                                                continue;
-                                            }
-
-                                            if (_fuelTypesList.Any(x => x.Equals(attribute)))
-                                            {
-                                                fuelType = attribute;
-                                                continue;
-                                            }
-
-                                            if (_transmissionTypesList.Any(x => x.Equals(attribute)))
-                                            {
-                                                transmissionType = attribute;
-                                                continue;
-                                            }
-
-                                            throw new Exception($"No attribute matches found for value: {attribute}");
                                         }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _log.Error("Could not scrape attribute field(s).", ex);
-                                        continue;
+
+                                        if (attribute.Contains("bhp"))
+                                        {
+                                            bhp = attribute;
+                                            continue;
+                                        }
+
+                                        if (attribute.Contains("mile"))
+                                        {
+                                            mileage = attribute;
+                                            continue;
+                                        }
+
+                                        if (_matchLs.IsMatch(attribute))
+                                        {
+                                            engineSize = attribute;
+                                            continue;
+                                        }
+
+                                        if (_bodyTypesList.Any(x => x.Equals(attribute)))
+                                        {
+                                            bodyType = attribute;
+                                            continue;
+                                        }
+
+                                        if (_fuelTypesList.Any(x => x.Equals(attribute)))
+                                        {
+                                            fuelType = attribute;
+                                            continue;
+                                        }
+
+                                        if (_transmissionTypesList.Any(x => x.Equals(attribute)))
+                                        {
+                                            transmissionType = attribute;
+                                            continue;
+                                        }
+
+                                        throw new Exception($"No attribute matches found for value: {attribute}");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not scrape article field(s).", ex);
+                                    _log.Error("Could not scrape attribute field(s).", ex);
                                     continue;
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.Error("Could not scrape article field(s).", ex);
+                                continue;
+                            }
 
-                                // Cleanse results.
+                            // Cleanse results.
+                            try
+                            {
+                                title = WebUtility.HtmlDecode(title);
+                                teaser = WebUtility.HtmlDecode(teaser);
+                                description = WebUtility.HtmlDecode(description);
+                                if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
+                                location = ToTitleCase(location);
+                                year = _removeNonNumeric.Replace(year, String.Empty);
+                                if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
+                                if (engineSize != null)
+                                {
+                                    engineSize = _removeLs.Replace(engineSize, String.Empty);
+                                    if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100)
+                                        engineSize = $"{Math.Round(double.Parse(engineSize))}";
+                                }
+                                if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
+                                sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
+                                if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
+                                price = _removeNonNumeric.Replace(price, String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.Error("Could not cleanse field(s).", ex);
+                                continue;
+                            }
+
+                            // De-duplication.
+                            // First, check if article link exists in db.
+                            ArticleVersion dbArticleVersion = null;
+                            Article dbArticle = null;
+                            bool articleLinkExists = _articleLinksList.Contains(link);
+
+                            if (articleLinkExists)
+                            {
                                 try
                                 {
-                                    title = WebUtility.HtmlDecode(title);
-                                    teaser = WebUtility.HtmlDecode(teaser);
-                                    description = WebUtility.HtmlDecode(description);
-                                    if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
-                                    location = ToTitleCase(location);
-                                    year = _removeNonNumeric.Replace(year, String.Empty);
-                                    if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
-                                    if (engineSize != null)
-                                    {
-                                        engineSize = _removeLs.Replace(engineSize, String.Empty);
-                                        if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100)
-                                            engineSize = $"{Math.Round(double.Parse(engineSize))}";
-                                    }
-                                    if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
-                                    sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
-                                    if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
-                                    price = _removeNonNumeric.Replace(price, String.Empty);
+                                    // Set existing article and latest article version.
+                                    dbArticle = _articleList.Single(x => x.Link == link);
+                                    dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
                                 }
-                                catch (Exception ex)
+                                catch (Exception)
                                 {
-                                    _log.Error("Could not cleanse field(s).", ex);
+                                    _log.Error($"Could not get dbArticle.Id: {dbArticle.Id}/dbArticleVersion.Id: {dbArticleVersion.Id}, removing from db.");
+                                    if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
+                                    if (dbArticle != null) _articleRepo.Delete(dbArticle);
+                                    if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
+                                    if (_articleLinksList.Contains(link)) _articleLinksList.Remove(link);
                                     continue;
                                 }
 
-                                // De-duplication.
-                                // First, check if article link exists in db.
-                                ArticleVersion dbArticleVersion = null;
-                                Article dbArticle = null;
-                                bool articleLinkExists = _articleLinksList.Contains(link);
-
-                                if (articleLinkExists)
+                                try
                                 {
-                                    try
-                                    {
-                                        // Set existing article and latest article version.
-                                        dbArticle = _articleList.Single(x => x.Link == link);
-                                        dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
-                                    }
-                                    catch (Exception)
-                                    {
-                                        _log.Error($"Could not get dbArticle.Id: {dbArticle.Id}/dbArticleVersion.Id: {dbArticleVersion.Id}, removing from db.");
-                                        if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
-                                        if (dbArticle != null) _articleRepo.Delete(dbArticle);
-                                        if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
-                                        if (_articleLinksList.Contains(link)) _articleLinksList.Remove(link);
-                                        continue;
-                                    }
-
                                     // Hash db article version.
                                     byte[] dbTitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
                                     byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
@@ -390,7 +389,8 @@ namespace AutotraderScraper
                                         try
                                         {
                                             // Update article version BHP.
-                                            if (!String.IsNullOrEmpty(bhp) && !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
+                                            if (!String.IsNullOrEmpty(bhp) &&
+                                                !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
                                             {
                                                 updateArticleVersion = true;
                                                 dbArticleVersion.Bhp = int.Parse(bhp);
@@ -423,21 +423,36 @@ namespace AutotraderScraper
                                     }
 
                                     // Check if price changed.
-                                    if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
-                                    if (int.Parse(price) < dbArticleVersion.Price) updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
+                                    if (int.Parse(price) > dbArticleVersion.Price)
+                                        updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
+                                    if (int.Parse(price) < dbArticleVersion.Price)
+                                        updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
 
                                     // Check if mileage changed.
-                                    if (mileage != null && dbArticleVersion.Mileage == null) updates += "Mileage newly added. ";
-                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
-                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && dbArticleVersion.Mileage == null)
+                                        updates += "Mileage newly added. ";
+                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage)
+                                        updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage)
+                                        updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
 
                                     // Check if thumbnail changed.
-                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
+                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
+                                        updates += "Thumbnail updated.";
                                 }
+                                catch (Exception ex)
+                                {
+                                    _log.Error("An error occured during Hash checking.", ex);
+                                    continue;
+                                }
+                            }
 
-                                // Init vars for db save.
-                                Article article = new Article();
-                                ArticleVersion articleVersion = new ArticleVersion();
+                            // Init vars for db save.
+                            Article article = new Article();
+                            ArticleVersion articleVersion = new ArticleVersion();
+
+                            try
+                            {
                                 string articleState;
 
                                 if (dbArticle == null)
@@ -497,14 +512,18 @@ namespace AutotraderScraper
                             }
                             catch (Exception ex)
                             {
-                                _log.Error("Could not process and save article/article version.", ex);
+                                _log.Error("Could not process and save article/article version." +
+                                           $"{Environment.NewLine}Article:" +
+                                           $"{Environment.NewLine}{article}" +
+                                           $"{Environment.NewLine}ArticleVersion:" +
+                                           $"{Environment.NewLine}{articleVersion}", ex);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         _failedArticles++;
-                        _log.Error($"Could not get or process scrape for page {pages}.", ex);
+                        _log.Error($"Could not get or process scrape for page {pages} of {carMake} {carModel}.", ex);
                     }
                 }
             }
