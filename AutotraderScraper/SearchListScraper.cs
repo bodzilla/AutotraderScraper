@@ -71,32 +71,7 @@ namespace AutotraderScraper
                 _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
                 _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
 
-                // First get total number of pages from web.
-                try
-                {
-                    _log.Info("Retrieving page count from web..");
-                    string data = _proxy.MakeRequest(url);
-
-                    // Parse response as HTML document.
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(data);
-
-                    try
-                    {
-                        string pagesNode = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/header/nav/ul/li[3]/strong[2]").InnerText.Trim();
-                        pages = int.Parse(pagesNode);
-                        _log.Info($"{pages} pages found.");
-                    }
-                    catch (Exception)
-                    {
-                        _log.Info($"Could not get page count from web, using default: {pages}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _log.Fatal("Could not get page count from web.", ex);
-                    throw;
-                }
+                _log.Info($"{pages} pages awaiting scrape..");
 
                 // Scrape search list by paging through pageset.
                 for (int i = 1; i <= pages; i++)
