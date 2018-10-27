@@ -69,13 +69,18 @@ namespace AutotraderScraper
                 throw;
             }
 
+            IList<string> proxies = new List<string>();
+
             MatchCollection regMatch = Regex.Matches(data, @"([0-9]+(?:\.[0-9]+){3}:[0-9]+)");
             if (regMatch.Count > 0)
             {
                 IList<string> matches = regMatch.OfType<Match>().Select(x => x.Value).ToList();
-                foreach (string match in matches) _proxyList.Push(match);
+                foreach (string match in matches) proxies.Add(match);
             }
             else throw new Exception("Proxy list is empty.");
+
+            // Shuffle the proxy list.
+            _proxyList = new Stack<string>(Shuffle(proxies));
         }
 
         public string MakeRequest(string url)
@@ -145,6 +150,21 @@ namespace AutotraderScraper
                 }
             }
             return data;
+        }
+
+        private static IList<string> Shuffle(IList<string> list)
+        {
+            int n = list.Count;
+            Random rnd = new Random();
+            while (n > 1)
+            {
+                int k = rnd.Next(0, n) % n;
+                n--;
+                string value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+            return list;
         }
     }
 }
