@@ -209,8 +209,7 @@ namespace AutotraderScraper
                                     int attributeCount = result.SelectNodes($"{path}/section[1]/div/ul[1]/li").Count;
 
                                     // First [li] object is the year, so start from second.
-                                    for (int j = 2; j <= attributeCount; j++)
-                                        attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
+                                    for (int j = 2; j <= attributeCount; j++) attributes.Add(result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[{j}]").InnerText.Trim());
 
                                     foreach (string attribute in attributes)
                                     {
@@ -293,8 +292,7 @@ namespace AutotraderScraper
                                 if (engineSize != null)
                                 {
                                     engineSize = _removeLs.Replace(engineSize, String.Empty);
-                                    if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100)
-                                        engineSize = $"{Math.Round(double.Parse(engineSize))}";
+                                    if (Math.Abs(double.Parse(engineSize) % 1) <= Double.Epsilon * 100) engineSize = $"{Math.Round(double.Parse(engineSize))}";
                                 }
                                 if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
                                 sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
@@ -423,22 +421,16 @@ namespace AutotraderScraper
                                     }
 
                                     // Check if price changed.
-                                    if (int.Parse(price) > dbArticleVersion.Price)
-                                        updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
-                                    if (int.Parse(price) < dbArticleVersion.Price)
-                                        updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
+                                    if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
+                                    if (int.Parse(price) < dbArticleVersion.Price) updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
 
                                     // Check if mileage changed.
-                                    if (mileage != null && dbArticleVersion.Mileage == null)
-                                        updates += "Mileage newly added. ";
-                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage)
-                                        updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
-                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage)
-                                        updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && dbArticleVersion.Mileage == null) updates += "Mileage newly added. ";
+                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
 
                                     // Check if thumbnail changed.
-                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
-                                        updates += "Thumbnail updated.";
+                                    if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
                                 }
                                 catch (Exception ex)
                                 {
@@ -564,9 +556,6 @@ namespace AutotraderScraper
             return combinedBytes;
         }
 
-        private static string ToTitleCase(string text)
-        {
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
-        }
+        private static string ToTitleCase(string text) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
     }
 }
