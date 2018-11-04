@@ -93,11 +93,12 @@ namespace AutotraderScraper
                         // Data notes.
                         string data = null;
                         HtmlNodeCollection results = null;
+                        string noResults = String.Empty;
 
                         try
                         {
                             // Ensure results are populated after web request.
-                            while (results == null)
+                            while (results == null && String.IsNullOrWhiteSpace(noResults))
                             {
                                 data = _proxy.MakeRequest(currentPage);
 
@@ -105,6 +106,13 @@ namespace AutotraderScraper
                                 HtmlDocument doc = new HtmlDocument();
                                 doc.LoadHtml(data);
                                 results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
+                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]").InnerText.Trim();
+                            }
+
+                            if (results == null && !String.IsNullOrWhiteSpace(noResults))
+                            {
+                                _log.Info("Skipping this page as no articles exist.");
+                                continue;
                             }
                         }
                         catch (Exception ex)
