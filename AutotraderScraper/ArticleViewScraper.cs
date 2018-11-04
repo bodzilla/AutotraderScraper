@@ -12,15 +12,25 @@ namespace AutotraderScraper
 {
     internal class ArticleViewScraper
     {
-        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILog _log;
+        private readonly ArticleRepository _articleRepo;
+        private readonly bool _useSleep;
+        private readonly int _sleepMin;
+        private readonly int _sleepMax;
 
-        private readonly Proxy _proxy = Proxy.Instance;
-        private readonly ArticleRepository _articleRepo = new ArticleRepository();
-        private readonly bool _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
-        private readonly int _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
-        private readonly int _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+        public ArticleViewScraper()
+        {
+            // Initialise objects.
+            _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            _articleRepo = new ArticleRepository();
 
-        public ArticleViewScraper(Stack<string> links)
+            // Load settings.
+            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
+            _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
+            _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+        }
+
+        public void Run(Stack<string> links)
         {
             try
             {
@@ -46,7 +56,7 @@ namespace AutotraderScraper
 
                         try
                         {
-                            data = _proxy.MakeRequest(link);
+                            data = Proxy.MakeRequest(link);
                         }
                         catch (Exception ex)
                         {

@@ -10,35 +10,23 @@ using log4net;
 
 namespace AutotraderScraper
 {
-    internal sealed class Proxy
+    internal static class Proxy
     {
-        private static volatile Proxy _instance;
-        private static readonly object Sync = new Object();
+        private static readonly ILog Log;
+        private static readonly Stack<string> ProxyList;
+        private static readonly bool UseProxy;
+        private static string _ip;
+        private static int? _port;
 
-        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Stack<string> _proxyList = new Stack<string>();
-        private readonly bool _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxy"]);
-
-        private string _ip;
-        private int? _port;
-
-        public static Proxy Instance
+        static Proxy()
         {
-            get
-            {
-                // Implement Singleton.
-                if (_instance != null) return _instance;
-                lock (Sync) _instance = new Proxy();
-                return _instance;
-            }
-        }
-
-        private Proxy()
-        {
-            if (!_useProxy) return;
+            Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            UseProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxy"]);
+            ProxyList = new Stack<string>();
+            if (!UseProxy) return;
 
             // Get IP for proxy to use for calls.
-            _log.Info("Retrieving proxy list from web..");
+            Log.Info("Retrieving proxy list from web..");
 
             // Get proxy IP from server.
             string proxyUrl = ConfigurationManager.AppSettings["ProxyUrl"];
@@ -49,7 +37,6 @@ namespace AutotraderScraper
 
             // Web request response will be read into this variable.
             string data;
-
             try
             {
                 using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
@@ -65,12 +52,11 @@ namespace AutotraderScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal("Could not get proxy details.", ex);
+                Log.Fatal("Could not get proxy details.", ex);
                 throw;
             }
 
             IList<string> proxies = new List<string>();
-
             MatchCollection regMatch = Regex.Matches(data, @"([0-9]+(?:\.[0-9]+){3}:[0-9]+)");
             if (regMatch.Count > 0)
             {
@@ -80,19 +66,18 @@ namespace AutotraderScraper
             else throw new Exception("Proxy list is empty.");
 
             // Shuffle the proxy list.
-            _proxyList = new Stack<string>(Shuffle(proxies));
+            ProxyList = new Stack<string>(Shuffle(proxies));
         }
 
-        public string MakeRequest(string url)
+        public static string MakeRequest(string url)
         {
-            string data = null;
-
-            if (_useProxy)
+            string data = String.Empty;
+            if (UseProxy)
             {
-                if (_proxyList.Count < 1) throw new Exception("Proxy list has been exhuasted with no successes.");
+                if (ProxyList.Count < 1) throw new Exception("Proxy list has been exhuasted with no successes.");
 
                 // Keep trying different proxies till success.
-                while (String.IsNullOrEmpty(data) && _proxyList.Count > 0)
+                while (String.IsNullOrEmpty(data) && ProxyList.Count > 0)
                 {
                     try
                     {
@@ -113,27 +98,26 @@ namespace AutotraderScraper
             return data;
         }
 
-        private string DownloadString(string url)
+        private static string DownloadString(string url)
         {
             string data;
-
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = ConfigurationManager.AppSettings["UserAgent"];
             request.Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
             request.ReadWriteTimeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
             request.Method = "GET";
 
-            if (_useProxy)
+            if (UseProxy)
             {
                 // If IP and port are not populated, then use the next in the list.
                 if (String.IsNullOrEmpty(_ip) && _port == null)
                 {
-                    string ipAndPort = _proxyList.Pop();
+                    string ipAndPort = ProxyList.Pop();
                     _ip = ipAndPort.Split(':')[0];
                     _port = int.Parse(ipAndPort.Split(':')[1]);
                 }
 
-                _log.Info($"Attempting with {_ip}:{_port}");
+                Log.Info($"Attempting with {_ip}:{_port}");
                 Uri uri = new Uri($"http://{_ip}:{_port}");
                 WebProxy proxy = new WebProxy(uri, false);
                 request.Proxy = proxy;

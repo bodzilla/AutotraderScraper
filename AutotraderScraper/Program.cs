@@ -27,7 +27,7 @@ namespace AutotraderScraper
 
                     // Only get active articles.
                     foreach (string link in new ArticleRepository().GetList(x => x.Active).OrderByDescending(x => x.DateAdded).Select(x => x.Link)) ArticleViewStack.Push(link);
-                    new ArticleViewScraper(ArticleViewStack);
+                    new ArticleViewScraper().Run(ArticleViewStack);
                 }
                 else
                 {
@@ -41,7 +41,7 @@ namespace AutotraderScraper
 
                     // Run all search lists.
                     Log.Info("Starting Search List Scraper..");
-                    foreach (string[] list in scrapeListArray) new SearchListScraper(int.Parse(list[0]), list[1]);
+                    foreach (string[] list in scrapeListArray) new SearchListScraper().Run(int.Parse(list[0]), list[1]);
                 }
             }
             catch (Exception ex)

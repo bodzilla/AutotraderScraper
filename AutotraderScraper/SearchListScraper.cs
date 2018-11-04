@@ -19,33 +19,50 @@ namespace AutotraderScraper
 {
     internal class SearchListScraper
     {
-        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILog _log;
+        private readonly CarMakeRepository _carMakeRepo;
+        private readonly CarModelRepository _carModelRepo;
+        private readonly ArticleRepository _articleRepo;
+        private readonly ArticleVersionRepository _articleVersionRepo;
+        private readonly IList<string> _bodyTypesList;
+        private readonly IList<string> _fuelTypesList;
+        private readonly HashSet<Article> _articleList;
+        private readonly HashSet<string> _articleLinksList;
+        private readonly bool _useSleep;
+        private readonly int _sleepMin;
+        private readonly int _sleepMax;
+        private readonly IList<string> _transmissionTypesList;
+        private readonly string _noImageLink;
+        private readonly Regex _removeNonNumeric;
+        private readonly Regex _matchLs;
+        private readonly Regex _removeLs;
+        private int _failedArticles;
 
-        private readonly Proxy _proxy = Proxy.Instance;
-        private readonly CarMakeRepository _carMakeRepo = new CarMakeRepository();
-        private readonly CarModelRepository _carModelRepo = new CarModelRepository();
-        private readonly ArticleRepository _articleRepo = new ArticleRepository();
-        private readonly ArticleVersionRepository _articleVersionRepo = new ArticleVersionRepository();
+        public SearchListScraper()
+        {
+            // Initialise objects.
+            _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            _carMakeRepo = new CarMakeRepository();
+            _carModelRepo = new CarModelRepository();
+            _articleRepo = new ArticleRepository();
+            _articleVersionRepo = new ArticleVersionRepository();
+            _articleList = new HashSet<Article>();
+            _articleLinksList = new HashSet<string>();
+            _removeNonNumeric = new Regex(@"[^\d]");
+            _matchLs = new Regex(@".*L\b");
+            _removeLs = new Regex("L");
 
-        private readonly bool _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
-        private readonly IList<string> _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
-        private readonly IList<string> _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
-        private readonly IList<string> _transmissionTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("TransmissionType"))
-            .Select(key => ConfigurationManager.AppSettings[key]).ToList();
-        private readonly int _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
-        private readonly int _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
-        private readonly string _noImageLink = ConfigurationManager.AppSettings["NoImageLink"];
+            // Load settings.
+            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
+            _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
+            _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+            _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
+            _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
+            _transmissionTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("TransmissionType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
+            _noImageLink = ConfigurationManager.AppSettings["NoImageLink"];
+        }
 
-        private readonly HashSet<Article> _articleList = new HashSet<Article>();
-        private readonly HashSet<string> _articleLinksList = new HashSet<string>();
-
-        private readonly Regex _removeNonNumeric = new Regex(@"[^\d]");
-        private readonly Regex _matchLs = new Regex(@".*L\b");
-        private readonly Regex _removeLs = new Regex("L");
-
-        private readonly int _failedArticles;
-
-        public SearchListScraper(int pages, string url)
+        public void Run(int pages, string url)
         {
             string carMake = String.Empty;
             string carModel = String.Empty;
@@ -100,7 +117,7 @@ namespace AutotraderScraper
                             // Ensure results are populated after web request.
                             while (results == null && String.IsNullOrWhiteSpace(noResults))
                             {
-                                data = _proxy.MakeRequest(currentPage);
+                                data = Proxy.MakeRequest(currentPage);
 
                                 // Parse response as HTML document.
                                 HtmlDocument doc = new HtmlDocument();
