@@ -95,8 +95,8 @@ namespace AutotraderScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions, x => x.VirtualDealer));
-                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions, x => x.VirtualDealer));
+                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId).Select(x => x.Link));
                 if (DealerList.Count < 1) DealerList.UnionWith(_dealerRepo.GetAll(x => x.VirtualArticles));
 
                 _log.Info($"{pages} page(s) awaiting scrape..");
@@ -470,6 +470,13 @@ namespace AutotraderScraper
                                                 dbArticleVersion.Bhp = int.Parse(bhp);
                                             }
 
+                                            // Check if relisted.
+                                            if (!dbArticle.Active)
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.Active = true;
+                                            }
+
                                             // Update article thumbnail.
                                             if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
                                             {
@@ -510,6 +517,9 @@ namespace AutotraderScraper
                                         _log.Info("Skipped duplicate article.");
                                         continue;
                                     }
+
+                                    // Check if relisted.
+                                    if (!dbArticle.Active) updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
 
                                     // Check if price changed.
                                     if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
