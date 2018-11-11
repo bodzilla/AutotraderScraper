@@ -51,6 +51,7 @@
     <Compile Include="ArticleVersionRepository.cs" />
     <Compile Include="CarMakeRepository.cs" />
     <Compile Include="CarModelRepository.cs" />
+    <Compile Include="DealerRepository.cs" />
     <Compile Include="GenericRepository.cs" />
     <Compile Include="Interfaces\IGenericRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

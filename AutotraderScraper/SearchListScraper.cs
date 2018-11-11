@@ -24,19 +24,25 @@ namespace AutotraderScraper
         private readonly CarModelRepository _carModelRepo;
         private readonly ArticleRepository _articleRepo;
         private readonly ArticleVersionRepository _articleVersionRepo;
+        private readonly DealerRepository _dealerRepo;
         private readonly IList<string> _bodyTypesList;
         private readonly IList<string> _fuelTypesList;
+        private readonly IList<string> _transmissionTypesList;
         private readonly HashSet<Article> _articleList;
         private readonly HashSet<string> _articleLinksList;
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
-        private readonly IList<string> _transmissionTypesList;
         private readonly string _noImageLink;
         private readonly Regex _removeNonNumeric;
         private readonly Regex _matchLs;
         private readonly Regex _removeLs;
+        private readonly Regex _removeDealerNameTrail;
+        private readonly Regex _dealerCountThreeSixty;
+        private readonly Regex _dealerCountVideo;
+
         private int _failedArticles;
+        private static readonly HashSet<Dealer> DealerList = new HashSet<Dealer>();
 
         public SearchListScraper()
         {
@@ -46,11 +52,15 @@ namespace AutotraderScraper
             _carModelRepo = new CarModelRepository();
             _articleRepo = new ArticleRepository();
             _articleVersionRepo = new ArticleVersionRepository();
+            _dealerRepo = new DealerRepository();
             _articleList = new HashSet<Article>();
             _articleLinksList = new HashSet<string>();
             _removeNonNumeric = new Regex(@"[^\d]");
             _matchLs = new Regex(@".*L\b");
             _removeLs = new Regex("L");
+            _removeDealerNameTrail = new Regex("Advertiser Logo");
+            _dealerCountThreeSixty = new Regex("360");
+            _dealerCountVideo = new Regex("Video");
 
             // Load settings.
             _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
@@ -85,10 +95,11 @@ namespace AutotraderScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions, x => x.VirtualDealer));
                 _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
+                if (DealerList.Count < 1) DealerList.UnionWith(_dealerRepo.GetAll(x => x.VirtualArticles));
 
-                _log.Info($"{pages} pages awaiting scrape..");
+                _log.Info($"{pages} page(s) awaiting scrape..");
 
                 // Scrape search list by paging through pageset.
                 for (int i = 1; i <= pages; i++)
@@ -153,6 +164,7 @@ namespace AutotraderScraper
                             string location;
                             string priceTag;
                             string thumbnail;
+                            string mediaCount;
                             string title;
                             string teaser;
                             string description;
@@ -164,6 +176,8 @@ namespace AutotraderScraper
                             string engineSize = null;
                             string bhp = null;
                             string fuelType = null;
+                            string dealerName = null;
+                            string dealerLogo = null;
                             string updates = null;
 
                             try
@@ -197,7 +211,52 @@ namespace AutotraderScraper
 
                                 try
                                 {
+                                    if (result.SelectSingleNode($"{path}/section[2]/div[3]/img") != null)
+                                    {
+                                        dealerName = result.SelectSingleNode($"{path}/section[2]/div[3]/img").GetAttributeValue("alt", null).Trim();
+                                        try
+                                        {
+                                            dealerLogo = result.SelectSingleNode($"{path}/section[2]/div[3]/img").GetAttributeValue("src", null).Trim();
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // No dealer logo.
+                                        }
+                                    }
+                                    else if (result.SelectSingleNode($"{path}/section[2]/div[2]/img") != null)
+                                    {
+                                        dealerName = result.SelectSingleNode($"{path}/section[2]/div[2]/img").GetAttributeValue("alt", null).Trim();
+                                        try
+                                        {
+                                            dealerLogo = result.SelectSingleNode($"{path}/section[2]/div[2]/img").GetAttributeValue("src", null).Trim();
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // No dealer logo.
+                                        }
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            // When logo doesn't exist but name does.
+                                            dealerName = result.SelectSingleNode($@"{path}/section[2]/div[@class=""search-listing-dealer-name""]").InnerText.Trim();
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // No dealer name.
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _log.Warn("Could not get dealer info.", ex);
+                                }
+
+                                try
+                                {
                                     thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
+                                    mediaCount = result.SelectSingleNode($"{path}/section[1]/figure/a/div").InnerText.Trim();
                                     title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
                                     teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
                                         ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
@@ -286,6 +345,20 @@ namespace AutotraderScraper
                                 teaser = WebUtility.HtmlDecode(teaser);
                                 description = WebUtility.HtmlDecode(description);
                                 if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
+                                if (mediaCount != null)
+                                {
+                                    string count = _removeNonNumeric.Replace(mediaCount, String.Empty).Trim();
+                                    count = _dealerCountThreeSixty.Replace(count, String.Empty).Trim();
+                                    int actualCount = 0;
+
+                                    // Add another media count to make up for the 360 degrees image.
+                                    if (_dealerCountThreeSixty.IsMatch(mediaCount)) actualCount++;
+
+                                    // Add another media count to make up for the video.
+                                    if (_dealerCountVideo.IsMatch(mediaCount)) actualCount++;
+
+                                    mediaCount = (int.Parse(count) + actualCount).ToString();
+                                }
                                 location = ToTitleCase(location);
                                 year = _removeNonNumeric.Replace(year, String.Empty);
                                 if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
@@ -298,6 +371,7 @@ namespace AutotraderScraper
                                 sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
                                 if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
                                 price = _removeNonNumeric.Replace(price, String.Empty);
+                                if (dealerName != null) dealerName = _removeDealerNameTrail.Replace(dealerName, String.Empty).Trim();
                             }
                             catch (Exception ex)
                             {
@@ -309,6 +383,7 @@ namespace AutotraderScraper
                             // First, check if article link exists in db.
                             ArticleVersion dbArticleVersion = null;
                             Article dbArticle = null;
+                            Dealer dbDealer = null;
                             bool articleLinkExists = _articleLinksList.Contains(link);
 
                             if (articleLinkExists)
@@ -318,10 +393,11 @@ namespace AutotraderScraper
                                     // Set existing article and latest article version.
                                     dbArticle = _articleList.Single(x => x.Link == link);
                                     dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
+                                    dbDealer = dbArticle.VirtualDealer;
                                 }
                                 catch (Exception)
                                 {
-                                    _log.Error($"Could not get dbArticle.Id: {dbArticle.Id}/dbArticleVersion.Id: {dbArticleVersion.Id}, removing from db.");
+                                    _log.Error($"Could not get dbArticle/dbArticleVersion, removing from db.");
                                     if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
                                     if (dbArticle != null) _articleRepo.Delete(dbArticle);
                                     if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
@@ -401,11 +477,26 @@ namespace AutotraderScraper
                                                 dbArticle.Thumbnail = thumbnail;
                                             }
 
+                                            // Update image count.
+                                            if (dbArticle.MediaCount != int.Parse(mediaCount))
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.MediaCount = int.Parse(mediaCount);
+                                            }
+
                                             // Update article price tag.
                                             if (!String.Equals(dbArticle.PriceTag, priceTag))
                                             {
                                                 updateArticle = true;
                                                 dbArticle.PriceTag = priceTag;
+                                            }
+
+                                            // Check if dealer needs creating / updating.
+                                            dbDealer = CreateUpdateDealer(dbDealer, dealerName, dealerLogo);
+                                            if (dbArticle.DealerId == null && dbDealer != null)
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.DealerId = dbDealer.Id;
                                             }
 
                                             if (updateArticleVersion) _articleVersionRepo.Update(dbArticleVersion);
@@ -439,6 +530,9 @@ namespace AutotraderScraper
                                 }
                             }
 
+                            // Check if dealer needs creating / updating.
+                            dbDealer = CreateUpdateDealer(dbDealer, dealerName, dealerLogo);
+
                             // Init vars for db save.
                             Article article = new Article();
                             ArticleVersion articleVersion = new ArticleVersion();
@@ -454,7 +548,9 @@ namespace AutotraderScraper
                                     article.Link = link;
                                     article.PriceTag = priceTag;
                                     article.Thumbnail = thumbnail;
+                                    article.MediaCount = int.Parse(mediaCount);
                                     article.CarModelId = carModelId;
+                                    article.DealerId = dbDealer?.Id;
                                     _articleRepo.Create(article);
                                     articleVersion.ArticleId = article.Id; // Link new article to article version.
                                     articleVersion.Version = 1; // Set first version.
@@ -464,6 +560,7 @@ namespace AutotraderScraper
                                     // Existing article.
                                     articleState = "existing";
                                     if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) article.Thumbnail = thumbnail;
+                                    article.DealerId = dbDealer?.Id;
                                     articleVersion.ArticleId = dbArticle.Id; // Link existing article.
                                     articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.
                                 }
@@ -528,6 +625,43 @@ namespace AutotraderScraper
                 if (_failedArticles > 0) _log.Info($"{_failedArticles} articles failed.");
                 _log.Info($"Search List Scraper finished scraping for {carMake} {carModel}.");
             }
+        }
+
+        private Dealer CreateUpdateDealer(Dealer dealer, string dealerName, string dealerLogo)
+        {
+            // Check if dealer needs creating / updating.
+            bool updateDealer = false;
+            if (dealer != null)
+            {
+                if (!String.Equals(dealer.Name, dealerName))
+                {
+                    updateDealer = true;
+                    dealer.Name = dealerName;
+                }
+                if (!String.Equals(dealer.Logo, dealerLogo))
+                {
+                    updateDealer = true;
+                    dealer.Logo = dealerLogo;
+                }
+
+                if (!updateDealer) return dealer;
+                _dealerRepo.Update(dealer);
+                DealerList.RemoveWhere(x => x.Id == dealer.Id);
+                DealerList.Add(dealer);
+            }
+            else if (!String.IsNullOrWhiteSpace(dealerName))
+            {
+                dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName));
+                if (dealer != null) return dealer;
+                dealer = new Dealer
+                {
+                    Name = dealerName,
+                    Logo = dealerLogo
+                };
+                _dealerRepo.Create(dealer);
+                DealerList.Add(dealer);
+            }
+            return dealer;
         }
 
         private static string GenerateHash(byte[] data)

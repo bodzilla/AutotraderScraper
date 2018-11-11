@@ -50,6 +50,7 @@
     <Compile Include="ArticleVersion.cs" />
     <Compile Include="CarMake.cs" />
     <Compile Include="CarModel.cs" />
+    <Compile Include="Dealer.cs" />
     <Compile Include="Interfaces\IBaseModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

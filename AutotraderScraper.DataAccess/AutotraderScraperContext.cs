@@ -22,6 +22,7 @@ namespace AutotraderScraper.DataAccess
 
             modelBuilder.Entity<CarMake>().ToTable("CarMake");
             modelBuilder.Entity<CarModel>().ToTable("CarModel");
+            modelBuilder.Entity<Dealer>().ToTable("Dealer");
             modelBuilder.Entity<Article>().ToTable("Article");
             modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersion");
         }

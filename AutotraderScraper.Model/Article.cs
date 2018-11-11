@@ -24,7 +24,14 @@ namespace AutotraderScraper.Model
 
         public string Thumbnail { get; set; }
 
+        public int MediaCount { get; set; } = 0;
+
+        public int? DealerId { get; set; }
+
         public int CarModelId { get; set; }
+
+        [ForeignKey("DealerId")]
+        public Dealer VirtualDealer { get; set; }
 
         [ForeignKey("CarModelId")]
         public virtual CarModel VirtualCarModel { get; set; }
@@ -40,6 +47,8 @@ namespace AutotraderScraper.Model
             str += $"PriceTag: {PriceTag}{Environment.NewLine}";
             str += $"Link: {Link}{Environment.NewLine}";
             str += $"Thumbnail: {Thumbnail}{Environment.NewLine}";
+            str += $"MediaCount: {MediaCount}{Environment.NewLine}";
+            str += $"DealerId: {DealerId}{Environment.NewLine}";
             str += $"CarModelId: {CarModelId}";
             return str;
         }
