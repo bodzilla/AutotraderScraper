@@ -150,7 +150,7 @@ namespace AutotraderScraper
                         }
 
                         // If no response, skip to next.
-                        if (String.IsNullOrEmpty(data))
+                        if (String.IsNullOrWhiteSpace(data))
                         {
                             _log.Error("Skipping scrape page due to null content.");
                             continue;
@@ -163,6 +163,7 @@ namespace AutotraderScraper
                             string link;
                             string location;
                             string priceTag;
+                            string tagLine;
                             string thumbnail;
                             string mediaCount;
                             string title;
@@ -183,7 +184,7 @@ namespace AutotraderScraper
                             try
                             {
                                 price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
-                                if (String.IsNullOrEmpty(price)) continue; // If price doesn't exist, this article has expired.
+                                if (String.IsNullOrWhiteSpace(price)) continue; // If price doesn't exist, this article has expired.
 
                                 // Get article values, split at '?' to remove excess trailing from url.
                                 link = result.SelectSingleNode($"{path}/section[1]/div/h2/a").GetAttributeValue("href", null).Split('?')[0];
@@ -258,9 +259,10 @@ namespace AutotraderScraper
                                     thumbnail = result.SelectSingleNode($"{path}/section[1]/figure/a/img").GetAttributeValue("src", null).Trim();
                                     mediaCount = result.SelectSingleNode($"{path}/section[1]/figure/a/div").InnerText.Trim();
                                     title = result.SelectSingleNode($"{path}/section[1]/div/h2/a").InnerText.Trim();
-                                    teaser = String.IsNullOrEmpty(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
+                                    teaser = String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim())
                                         ? null : result.SelectSingleNode($"{path}/section[1]/div/p[1]").InnerText.Trim();
-                                    description = result.SelectSingleNode($"{path}/section[1]/div/p[2]").InnerText.Trim();
+                                    tagLine = result.SelectSingleNode($"{path}/section[1]/div/ul[2]/li")?.InnerText.Trim();
+                                    description = result.SelectSingleNode($"{path}/section[1]/div/p[2]")?.InnerText.Trim();
                                     sellerType = result.SelectSingleNode($"{path}/section[1]/div/div/div[1]").InnerText.Trim();
                                     year = result.SelectSingleNode($"{path}/section[1]/div/ul[1]/li[1]").InnerText.Substring(0, 4).Trim();
 
@@ -273,7 +275,7 @@ namespace AutotraderScraper
                                     foreach (string attribute in attributes)
                                     {
                                         // Sometimes the year is missing from original field as it's within attributes.
-                                        if (String.IsNullOrEmpty(year))
+                                        if (String.IsNullOrWhiteSpace(year))
                                         {
                                             try
                                             {
@@ -343,7 +345,7 @@ namespace AutotraderScraper
                             {
                                 title = WebUtility.HtmlDecode(title);
                                 teaser = WebUtility.HtmlDecode(teaser);
-                                description = WebUtility.HtmlDecode(description);
+                                if (description != null) WebUtility.HtmlDecode(description);
                                 if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
                                 if (mediaCount != null)
                                 {
@@ -369,7 +371,7 @@ namespace AutotraderScraper
                                 }
                                 if (bhp != null) bhp = _removeNonNumeric.Replace(bhp, String.Empty);
                                 sellerType = sellerType.Contains("Trade") ? "Trade" : "Private";
-                                if (!String.IsNullOrEmpty(priceTag)) priceTag = ToTitleCase(priceTag);
+                                if (!String.IsNullOrWhiteSpace(priceTag)) priceTag = ToTitleCase(priceTag);
                                 price = _removeNonNumeric.Replace(price, String.Empty);
                                 if (dealerName != null) dealerName = _removeDealerNameTrail.Replace(dealerName, String.Empty).Trim();
                             }
@@ -397,7 +399,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception)
                                 {
-                                    _log.Error($"Could not get dbArticle/dbArticleVersion, removing from db.");
+                                    _log.Error("Could not get dbArticle/dbArticleVersion, removing from db.");
                                     if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
                                     if (dbArticle != null) _articleRepo.Delete(dbArticle);
                                     if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
@@ -463,7 +465,7 @@ namespace AutotraderScraper
                                         try
                                         {
                                             // Update article version BHP.
-                                            if (!String.IsNullOrEmpty(bhp) &&
+                                            if (!String.IsNullOrWhiteSpace(bhp) &&
                                                 !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
                                             {
                                                 updateArticleVersion = true;
@@ -475,6 +477,13 @@ namespace AutotraderScraper
                                             {
                                                 updateArticle = true;
                                                 dbArticle.Active = true;
+                                            }
+
+                                            // Update tag line.
+                                            if (!String.Equals(dbArticle.TagLine, tagLine))
+                                            {
+                                                updateArticle = true;
+                                                dbArticle.TagLine = tagLine;
                                             }
 
                                             // Update article thumbnail.
@@ -557,6 +566,7 @@ namespace AutotraderScraper
                                     articleState = "new";
                                     article.Link = link;
                                     article.PriceTag = priceTag;
+                                    article.TagLine = tagLine;
                                     article.Thumbnail = thumbnail;
                                     article.MediaCount = int.Parse(mediaCount);
                                     article.CarModelId = carModelId;
@@ -569,7 +579,10 @@ namespace AutotraderScraper
                                 {
                                     // Existing article.
                                     articleState = "existing";
+                                    if (priceTag != null && !String.Equals(dbArticle.PriceTag, priceTag)) article.PriceTag = priceTag;
+                                    if (tagLine != null && !String.Equals(dbArticle.TagLine, tagLine)) article.TagLine = tagLine;
                                     if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) article.Thumbnail = thumbnail;
+                                    if (mediaCount != null && dbArticle.MediaCount != int.Parse(mediaCount)) article.MediaCount = int.Parse(mediaCount);
                                     article.DealerId = dbDealer?.Id;
                                     articleVersion.ArticleId = dbArticle.Id; // Link existing article.
                                     articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.

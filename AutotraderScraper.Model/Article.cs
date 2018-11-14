@@ -20,6 +20,8 @@ namespace AutotraderScraper.Model
 
         public string PriceTag { get; set; }
 
+        public string TagLine { get; set; }
+
         public string Link { get; set; }
 
         public string Thumbnail { get; set; }
@@ -45,6 +47,7 @@ namespace AutotraderScraper.Model
             str += $"DateAdded: {DateAdded}{Environment.NewLine}";
             str += $"Active: {Active}{Environment.NewLine}";
             str += $"PriceTag: {PriceTag}{Environment.NewLine}";
+            str += $"TagLine: {TagLine}{Environment.NewLine}";
             str += $"Link: {Link}{Environment.NewLine}";
             str += $"Thumbnail: {Thumbnail}{Environment.NewLine}";
             str += $"MediaCount: {MediaCount}{Environment.NewLine}";

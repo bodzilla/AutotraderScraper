@@ -67,6 +67,10 @@
     <Compile Include="Migrations\201811101240291_AddDealerEntityAndMediaCount.Designer.cs">
       <DependentUpon>201811101240291_AddDealerEntityAndMediaCount.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811140934346_AddTagLineToArticle.cs" />
+    <Compile Include="Migrations\201811140934346_AddTagLineToArticle.Designer.cs">
+      <DependentUpon>201811140934346_AddTagLineToArticle.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -88,6 +92,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811101240291_AddDealerEntityAndMediaCount.resx">
       <DependentUpon>201811101240291_AddDealerEntityAndMediaCount.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811140934346_AddTagLineToArticle.resx">
+      <DependentUpon>201811140934346_AddTagLineToArticle.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
