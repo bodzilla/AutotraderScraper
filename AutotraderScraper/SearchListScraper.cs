@@ -346,7 +346,7 @@ namespace AutotraderScraper
                                 title = WebUtility.HtmlDecode(title);
                                 teaser = WebUtility.HtmlDecode(teaser);
                                 if (tagLine != null) tagLine = ToTitleCase(tagLine);
-                                if (description != null) WebUtility.HtmlDecode(description);
+                                if (description != null) description = WebUtility.HtmlDecode(description);
                                 if (thumbnail != null && thumbnail.Equals(_noImageLink)) thumbnail = null;
                                 if (mediaCount != null)
                                 {
