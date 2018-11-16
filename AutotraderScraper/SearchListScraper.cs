@@ -343,6 +343,10 @@ namespace AutotraderScraper
                             // Cleanse results.
                             try
                             {
+                                year = _removeNonNumeric.Replace(year, String.Empty);
+                                // If the year is null, then this article is not a properly listed article.
+                                if (String.IsNullOrWhiteSpace(year)) continue;
+
                                 title = WebUtility.HtmlDecode(title);
                                 teaser = WebUtility.HtmlDecode(teaser);
                                 if (tagLine != null) tagLine = ToTitleCase(tagLine);
@@ -363,7 +367,6 @@ namespace AutotraderScraper
                                     mediaCount = (int.Parse(count) + actualCount).ToString();
                                 }
                                 location = ToTitleCase(location);
-                                year = _removeNonNumeric.Replace(year, String.Empty);
                                 if (mileage != null) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
                                 if (engineSize != null)
                                 {
@@ -415,7 +418,8 @@ namespace AutotraderScraper
                                     byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
                                     byte[] dbTeaserBytes = { };
                                     if (dbArticleVersion.Teaser != null) dbTeaserBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Teaser);
-                                    byte[] dbDescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
+                                    byte[] dbDescriptionBytes = { };
+                                    if (dbArticleVersion.Description != null) dbDescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
                                     byte[] dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString());
                                     byte[] dbBodyTypeBytes = { };
                                     if (dbArticleVersion.BodyType != null) dbBodyTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.BodyType);
@@ -438,7 +442,8 @@ namespace AutotraderScraper
                                     byte[] locationBytes = Encoding.ASCII.GetBytes(location);
                                     byte[] teaserBytes = { };
                                     if (teaser != null) teaserBytes = Encoding.ASCII.GetBytes(teaser);
-                                    byte[] descriptionBytes = Encoding.ASCII.GetBytes(description);
+                                    byte[] descriptionBytes = { };
+                                    if (description != null) descriptionBytes = Encoding.ASCII.GetBytes(description);
                                     byte[] yearBytes = Encoding.ASCII.GetBytes(year);
                                     byte[] bodyTypeBytes = { };
                                     if (bodyType != null) bodyTypeBytes = Encoding.ASCII.GetBytes(bodyType);
