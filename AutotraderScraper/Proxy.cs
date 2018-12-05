@@ -82,6 +82,7 @@ namespace AutotraderScraper
                     try
                     {
                         data = DownloadString(url);
+                        if (String.IsNullOrWhiteSpace(data)) Next();
                     }
                     catch (Exception)
                     {
@@ -110,12 +111,7 @@ namespace AutotraderScraper
             if (UseProxy)
             {
                 // If IP and port are not populated, then use the next in the list.
-                if (String.IsNullOrEmpty(_ip) && _port == null)
-                {
-                    string ipAndPort = ProxyList.Pop();
-                    _ip = ipAndPort.Split(':')[0];
-                    _port = int.Parse(ipAndPort.Split(':')[1]);
-                }
+                if (String.IsNullOrEmpty(_ip) && _port == null) Next();
 
                 Log.Info($"Attempting with {_ip}:{_port}");
                 Uri uri = new Uri($"http://{_ip}:{_port}");
@@ -134,6 +130,13 @@ namespace AutotraderScraper
                 }
             }
             return data;
+        }
+
+        private static void Next()
+        {
+            string ipAndPort = ProxyList.Pop();
+            _ip = ipAndPort.Split(':')[0];
+            _port = int.Parse(ipAndPort.Split(':')[1]);
         }
 
         private static IList<string> Shuffle(IList<string> list)

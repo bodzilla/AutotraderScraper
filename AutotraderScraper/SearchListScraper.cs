@@ -25,6 +25,7 @@ namespace AutotraderScraper
         private readonly ArticleRepository _articleRepo;
         private readonly ArticleVersionRepository _articleVersionRepo;
         private readonly DealerRepository _dealerRepo;
+        private readonly IList<string> _postCodes;
         private readonly IList<string> _bodyTypesList;
         private readonly IList<string> _fuelTypesList;
         private readonly IList<string> _transmissionTypesList;
@@ -33,7 +34,9 @@ namespace AutotraderScraper
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
+        private readonly bool _useRandomPostCode;
         private readonly string _noImageLink;
+        private readonly Regex _replacePostCode;
         private readonly Regex _removeNonNumeric;
         private readonly Regex _matchLs;
         private readonly Regex _removeLs;
@@ -55,6 +58,7 @@ namespace AutotraderScraper
             _dealerRepo = new DealerRepository();
             _articleList = new HashSet<Article>();
             _articleLinksList = new HashSet<string>();
+            _replacePostCode = new Regex("pstcde");
             _removeNonNumeric = new Regex(@"[^\d]");
             _matchLs = new Regex(@".*L\b");
             _removeLs = new Regex("L");
@@ -66,10 +70,13 @@ namespace AutotraderScraper
             _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
             _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
             _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+            _useRandomPostCode = bool.Parse(ConfigurationManager.AppSettings["UseRandomPostCode"]);
+            _postCodes = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("PstCde")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _transmissionTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("TransmissionType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _noImageLink = ConfigurationManager.AppSettings["NoImageLink"];
+            _postCodes = Shuffle(_postCodes);
         }
 
         public void Run(int pages, string url)
@@ -112,6 +119,16 @@ namespace AutotraderScraper
                             int sleep = new Random().Next(_sleepMin, _sleepMax);
                             _log.Info($"Sleeping for {sleep} ms.");
                             Thread.Sleep(sleep);
+                        }
+
+                        if (_useRandomPostCode)
+                        {
+                            if (url.Contains(_replacePostCode.ToString()))
+                            {
+                                // Pick a random postcode in the list.
+                                string postCode = _postCodes[new Random().Next(_postCodes.Count)];
+                                url = _replacePostCode.Replace(url, postCode);
+                            }
                         }
 
                         // Set page.
@@ -691,6 +708,21 @@ namespace AutotraderScraper
                 DealerList.Add(dealer);
             }
             return dealer;
+        }
+
+        private static IList<string> Shuffle(IList<string> list)
+        {
+            int n = list.Count;
+            Random rnd = new Random();
+            while (n > 1)
+            {
+                int k = rnd.Next(0, n) % n;
+                n--;
+                string value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+            return list;
         }
 
         private static string GenerateHash(byte[] data)
