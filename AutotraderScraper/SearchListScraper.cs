@@ -121,18 +121,17 @@ namespace AutotraderScraper
                             Thread.Sleep(sleep);
                         }
 
+                        // Set page.
+                        string currentPage = $"{url}&page={i}";
                         if (_useRandomPostCode)
                         {
                             if (url.Contains(_replacePostCode.ToString()))
                             {
                                 // Pick a random postcode in the list.
                                 string postCode = _postCodes[new Random().Next(_postCodes.Count)];
-                                url = _replacePostCode.Replace(url, postCode);
+                                currentPage = _replacePostCode.Replace(currentPage, postCode);
                             }
                         }
-
-                        // Set page.
-                        string currentPage = $"{url}&page={i}";
                         _log.Info($"Scraping page: {currentPage}");
 
                         // Data notes.
