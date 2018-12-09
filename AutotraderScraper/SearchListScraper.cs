@@ -482,73 +482,73 @@ namespace AutotraderScraper
                                     string hash = GenerateHash(bytes);
 
                                     // Compare hashes, skip saving if they are the same as this means we have the latest version.
+                                    bool updateArticle = false;
+                                    bool updateArticleVersion = false;
+
+                                    // Although we have the latest article version, we may like to update some fields.
+                                    try
+                                    {
+                                        // Update article version BHP.
+                                        if (!String.IsNullOrWhiteSpace(bhp) &&
+                                            !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
+                                        {
+                                            updateArticleVersion = true;
+                                            dbArticleVersion.Bhp = int.Parse(bhp);
+                                        }
+
+                                        // Check if relisted.
+                                        if (!dbArticle.Active)
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.Active = true;
+                                        }
+
+                                        // Update tag line.
+                                        if (!String.Equals(dbArticle.TagLine, tagLine))
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.TagLine = tagLine;
+                                        }
+
+                                        // Update article thumbnail.
+                                        if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.Thumbnail = thumbnail;
+                                        }
+
+                                        // Update image count.
+                                        if (dbArticle.MediaCount != int.Parse(mediaCount))
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.MediaCount = int.Parse(mediaCount);
+                                        }
+
+                                        // Update article price tag.
+                                        if (!String.Equals(dbArticle.PriceTag, priceTag))
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.PriceTag = priceTag;
+                                        }
+
+                                        // Check if dealer needs creating / updating.
+                                        dbDealer = CreateUpdateDealer(dbDealer, dealerName, dealerLogo);
+                                        if (dbArticle.DealerId == null && dbDealer != null)
+                                        {
+                                            updateArticle = true;
+                                            dbArticle.DealerId = dbDealer.Id;
+                                        }
+
+                                        if (updateArticleVersion) _articleVersionRepo.Update(dbArticleVersion);
+                                        if (updateArticle) _articleRepo.Update(dbArticle);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _log.Error("Could not update existing article/article version.", ex);
+                                    }
+
                                     if (String.Equals(dbHash, hash))
                                     {
-                                        bool updateArticle = false;
-                                        bool updateArticleVersion = false;
-
-                                        // Although we have the latest article version, we may like to update some fields.
-                                        try
-                                        {
-                                            // Update article version BHP.
-                                            if (!String.IsNullOrWhiteSpace(bhp) &&
-                                                !String.Equals(dbArticleVersion.Bhp.ToString(), bhp))
-                                            {
-                                                updateArticleVersion = true;
-                                                dbArticleVersion.Bhp = int.Parse(bhp);
-                                            }
-
-                                            // Check if relisted.
-                                            if (!dbArticle.Active)
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.Active = true;
-                                            }
-
-                                            // Update tag line.
-                                            if (!String.Equals(dbArticle.TagLine, tagLine))
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.TagLine = tagLine;
-                                            }
-
-                                            // Update article thumbnail.
-                                            if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail))
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.Thumbnail = thumbnail;
-                                            }
-
-                                            // Update image count.
-                                            if (dbArticle.MediaCount != int.Parse(mediaCount))
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.MediaCount = int.Parse(mediaCount);
-                                            }
-
-                                            // Update article price tag.
-                                            if (!String.Equals(dbArticle.PriceTag, priceTag))
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.PriceTag = priceTag;
-                                            }
-
-                                            // Check if dealer needs creating / updating.
-                                            dbDealer = CreateUpdateDealer(dbDealer, dealerName, dealerLogo);
-                                            if (dbArticle.DealerId == null && dbDealer != null)
-                                            {
-                                                updateArticle = true;
-                                                dbArticle.DealerId = dbDealer.Id;
-                                            }
-
-                                            if (updateArticleVersion) _articleVersionRepo.Update(dbArticleVersion);
-                                            if (updateArticle) _articleRepo.Update(dbArticle);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            _log.Error("Could not update existing article/article version.", ex);
-                                        }
-
                                         _log.Info("Skipped duplicate article.");
                                         continue;
                                     }
