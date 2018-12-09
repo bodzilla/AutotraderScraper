@@ -429,7 +429,9 @@ namespace AutotraderScraper
 
                                 try
                                 {
-                                    // Hash db article version.
+                                    // Hash db article version and article thumbnail.
+                                    byte[] dbThumbnailBytes = { };
+                                    if (dbArticle.Thumbnail != null) dbThumbnailBytes = Encoding.ASCII.GetBytes(dbArticle.Thumbnail);
                                     byte[] dbTitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
                                     byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
                                     byte[] dbTeaserBytes = { };
@@ -449,11 +451,13 @@ namespace AutotraderScraper
                                     if (dbArticleVersion.FuelType != null) dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType);
                                     byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
                                     byte[] dbPriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
-                                    byte[] dbBytes = CombineBytes(dbTitleBytes, dbLocationBytes, dbTeaserBytes, dbDescriptionBytes, dbYearBytes, dbBodyTypeBytes, dbMileageBytes,
+                                    byte[] dbBytes = CombineBytes(dbThumbnailBytes, dbTitleBytes, dbLocationBytes, dbTeaserBytes, dbDescriptionBytes, dbYearBytes, dbBodyTypeBytes, dbMileageBytes,
                                         dbTransmissionTypeBytes, dbEngineSizeBytes, dbFuelTypeBytes, dbSellerTypeBytes, dbPriceBytes);
                                     string dbHash = GenerateHash(dbBytes);
 
                                     // Hash fetched verison of this article.
+                                    byte[] thumbnailBytes = { };
+                                    if (thumbnail != null) thumbnailBytes = Encoding.ASCII.GetBytes(thumbnail);
                                     byte[] titleBytes = Encoding.ASCII.GetBytes(title);
                                     byte[] locationBytes = Encoding.ASCII.GetBytes(location);
                                     byte[] teaserBytes = { };
@@ -473,7 +477,7 @@ namespace AutotraderScraper
                                     if (fuelType != null) fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType);
                                     byte[] sellerTypeBytes = Encoding.ASCII.GetBytes(sellerType);
                                     byte[] priceBytes = Encoding.ASCII.GetBytes(price);
-                                    byte[] bytes = CombineBytes(titleBytes, locationBytes, teaserBytes, descriptionBytes, yearBytes, bodyTypeBytes, mileageBytes,
+                                    byte[] bytes = CombineBytes(thumbnailBytes, titleBytes, locationBytes, teaserBytes, descriptionBytes, yearBytes, bodyTypeBytes, mileageBytes,
                                         transmissionTypeBytes, engineSizeBytes, fuelTypeBytes, sellerTypeBytes, priceBytes);
                                     string hash = GenerateHash(bytes);
 
