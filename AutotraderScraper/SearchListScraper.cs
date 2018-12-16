@@ -76,7 +76,6 @@ namespace AutotraderScraper
             _fuelTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("FuelType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _transmissionTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("TransmissionType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _noImageLink = ConfigurationManager.AppSettings["NoImageLink"];
-            _postCodes = Shuffle(_postCodes);
         }
 
         public void Run(int pages, string url)
@@ -711,21 +710,6 @@ namespace AutotraderScraper
                 DealerList.Add(dealer);
             }
             return dealer;
-        }
-
-        private static IList<string> Shuffle(IList<string> list)
-        {
-            int n = list.Count;
-            Random rnd = new Random();
-            while (n > 1)
-            {
-                int k = rnd.Next(0, n) % n;
-                n--;
-                string value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
-            return list;
         }
 
         private static string GenerateHash(byte[] data)
