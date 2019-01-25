@@ -677,6 +677,8 @@ namespace AutotraderScraper
 
         private Dealer CreateUpdateDealer(Dealer dealer, string dealerName, string dealerLogo)
         {
+            if (String.IsNullOrWhiteSpace(dealerName)) return null;
+
             // Check if dealer needs creating / updating.
             bool updateDealer = false;
             if (dealer != null)
@@ -699,15 +701,22 @@ namespace AutotraderScraper
             }
             else if (!String.IsNullOrWhiteSpace(dealerName))
             {
-                dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName));
-                if (dealer != null) return dealer;
-                dealer = new Dealer
+                try
                 {
-                    Name = dealerName,
-                    Logo = dealerLogo
-                };
-                _dealerRepo.Create(dealer);
-                DealerList.Add(dealer);
+                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName));
+                    if (dealer != null) return dealer;
+                    dealer = new Dealer
+                    {
+                        Name = dealerName,
+                        Logo = dealerLogo
+                    };
+                    _dealerRepo.Create(dealer);
+                    DealerList.Add(dealer);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error($"Could not create dealer: {dealerName}", ex);
+                }
             }
             return dealer;
         }
