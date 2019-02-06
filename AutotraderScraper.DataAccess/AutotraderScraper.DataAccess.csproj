@@ -71,6 +71,10 @@
     <Compile Include="Migrations\201811140934346_AddTagLineToArticle.Designer.cs">
       <DependentUpon>201811140934346_AddTagLineToArticle.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902061337110_AddUniqueConstraintToArticleLinkAndDealerName.cs" />
+    <Compile Include="Migrations\201902061337110_AddUniqueConstraintToArticleLinkAndDealerName.Designer.cs">
+      <DependentUpon>201902061337110_AddUniqueConstraintToArticleLinkAndDealerName.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -95,6 +99,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811140934346_AddTagLineToArticle.resx">
       <DependentUpon>201811140934346_AddTagLineToArticle.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902061337110_AddUniqueConstraintToArticleLinkAndDealerName.resx">
+      <DependentUpon>201902061337110_AddUniqueConstraintToArticleLinkAndDealerName.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,6 +1,7 @@
 ﻿using AutotraderScraper.Model.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutotraderScraper.Model
@@ -22,6 +23,8 @@ namespace AutotraderScraper.Model
 
         public string TagLine { get; set; }
 
+        [MaxLength(450)]
+        [Index(IsUnique = true)]
         public string Link { get; set; }
 
         public string Thumbnail { get; set; }
