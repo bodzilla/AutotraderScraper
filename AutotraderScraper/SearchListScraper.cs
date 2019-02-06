@@ -546,9 +546,18 @@ namespace AutotraderScraper
                                         _log.Error("Could not update existing article/article version.", ex);
                                     }
 
+                                    // Check if the hashes are a match, if so then skip.
                                     if (String.Equals(dbHash, hash))
                                     {
                                         _log.Info("Skipped duplicate article.");
+                                        continue;
+                                    }
+
+                                    // If hashes are not matched, make sure that the difference isn't
+                                    // on the new version having no thumbnail as want to retain an article's image, even if it's been removed.
+                                    if (thumbnail == null & !String.IsNullOrWhiteSpace(dbArticle.Thumbnail))
+                                    {
+                                        _log.Info("Skipped duplicate article to retain thumbnail.");
                                         continue;
                                     }
 
