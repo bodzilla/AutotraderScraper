@@ -555,7 +555,9 @@ namespace AutotraderScraper
 
                                     // If hashes are not matched, make sure that the difference isn't
                                     // on the new version having no thumbnail as want to retain an article's image, even if it's been removed.
-                                    if (thumbnail == null & !String.IsNullOrWhiteSpace(dbArticle.Thumbnail))
+                                    // Also make sure that the two thumbnails are not identical in their literal strings as there is some weird
+                                    // issue when two strings generate different array bytes even though they point to the same image.
+                                    if (thumbnail == null & !String.IsNullOrWhiteSpace(dbArticle.Thumbnail) || dbArticle.Thumbnail.Equals(thumbnail))
                                     {
                                         _log.Info("Skipped duplicate article to retain thumbnail.");
                                         continue;
