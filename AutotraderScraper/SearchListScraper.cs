@@ -569,12 +569,15 @@ namespace AutotraderScraper
                                     if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
 
                                     // If hashes are not matched, make sure that there actually is a change otherwise skip.
-                                    if (String.IsNullOrWhiteSpace(updates)
-                                        && dbArticleVersion.Title.Equals(title)
-                                        && dbArticleVersion.Teaser.Equals(teaser)
-                                        && dbArticleVersion.Description.Equals(description))
+                                    byte[] dbChangeBytes = CombineBytes(dbTitleBytes, dbTeaserBytes, dbDescriptionBytes);
+                                    string dbChangeHash = GenerateHash(dbChangeBytes);
+
+                                    byte[] changeBytes = CombineBytes(titleBytes, teaserBytes, descriptionBytes);
+                                    string changeHash = GenerateHash(changeBytes);
+
+                                    if (dbChangeHash.Equals(changeHash) && String.IsNullOrWhiteSpace(updates))
                                     {
-                                        _log.Info("Skipped duplicate as no updates.");
+                                        _log.Info("Skipped duplicate article as no change.");
                                         continue;
                                     }
                                 }
