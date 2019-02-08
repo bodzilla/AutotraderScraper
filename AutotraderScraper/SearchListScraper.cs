@@ -553,16 +553,6 @@ namespace AutotraderScraper
                                         continue;
                                     }
 
-                                    // If hashes are not matched, make sure that the difference isn't
-                                    // on the new version having no thumbnail as want to retain an article's image, even if it's been removed.
-                                    // Also make sure that the two thumbnails are not identical in their literal strings as there is some weird
-                                    // issue when two strings generate different array bytes even though they point to the same image.
-                                    if (thumbnail == null & !String.IsNullOrWhiteSpace(dbArticle.Thumbnail) || dbArticle.Thumbnail.Equals(thumbnail))
-                                    {
-                                        _log.Info("Skipped duplicate article to retain thumbnail.");
-                                        continue;
-                                    }
-
                                     // Check if relisted.
                                     if (!dbArticle.Active) updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
 
@@ -577,6 +567,16 @@ namespace AutotraderScraper
 
                                     // Check if thumbnail changed.
                                     if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
+
+                                    // If hashes are not matched, make sure that there actually is a change otherwise skip.
+                                    if (String.IsNullOrWhiteSpace(updates)
+                                        && dbArticleVersion.Title.Equals(title)
+                                        && dbArticleVersion.Teaser.Equals(teaser)
+                                        && dbArticleVersion.Description.Equals(description))
+                                    {
+                                        _log.Info("Skipped duplicate as no updates.");
+                                        continue;
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
