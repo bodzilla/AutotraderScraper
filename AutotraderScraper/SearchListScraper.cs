@@ -304,7 +304,7 @@ namespace AutotraderScraper
                                             }
                                         }
 
-                                        if (attribute.Contains("bhp"))
+                                        if (attribute.Contains("bhp") || attribute.Contains("BHP"))
                                         {
                                             bhp = attribute;
                                             continue;
