@@ -17,6 +17,8 @@ namespace AutotraderScraper.Model
 
         public DateTime DateAdded { get; set; }
 
+        public DateTime? DateEnded { get; set; } = null;
+
         public bool Active { get; set; } = true;
 
         public string PriceTag { get; set; }
@@ -48,6 +50,7 @@ namespace AutotraderScraper.Model
             string str = String.Empty;
             str += $"Id: {Id}{Environment.NewLine}";
             str += $"DateAdded: {DateAdded}{Environment.NewLine}";
+            str += $"DateEnded: {DateEnded}{Environment.NewLine}";
             str += $"Active: {Active}{Environment.NewLine}";
             str += $"PriceTag: {PriceTag}{Environment.NewLine}";
             str += $"TagLine: {TagLine}{Environment.NewLine}";

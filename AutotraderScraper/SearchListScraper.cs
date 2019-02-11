@@ -554,7 +554,11 @@ namespace AutotraderScraper
                                     }
 
                                     // Check if relisted.
-                                    if (!dbArticle.Active) updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
+                                    if (!dbArticle.Active)
+                                    {
+                                        dbArticle.DateEnded = null;
+                                        updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
+                                    }
 
                                     // Check if price changed.
                                     if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
