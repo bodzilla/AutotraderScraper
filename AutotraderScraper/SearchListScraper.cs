@@ -538,6 +538,14 @@ namespace AutotraderScraper
                                             dbArticle.DealerId = dbDealer.Id;
                                         }
 
+                                        // Check if relisted.
+                                        if (!dbArticle.Active)
+                                        {
+                                            dbArticle.Active = true;
+                                            dbArticle.DateEnded = null;
+                                            updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
+                                        }
+
                                         if (updateArticleVersion) _articleVersionRepo.Update(dbArticleVersion);
                                         if (updateArticle) _articleRepo.Update(dbArticle);
                                     }
@@ -551,13 +559,6 @@ namespace AutotraderScraper
                                     {
                                         _log.Info("Skipped duplicate article.");
                                         continue;
-                                    }
-
-                                    // Check if relisted.
-                                    if (!dbArticle.Active)
-                                    {
-                                        dbArticle.DateEnded = null;
-                                        updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
                                     }
 
                                     // Check if price changed.
