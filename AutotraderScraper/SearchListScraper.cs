@@ -541,6 +541,7 @@ namespace AutotraderScraper
                                         // Check if relisted.
                                         if (!dbArticle.Active)
                                         {
+                                            updateArticle = true;
                                             dbArticle.Active = true;
                                             dbArticle.DateEnded = null;
                                             updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
