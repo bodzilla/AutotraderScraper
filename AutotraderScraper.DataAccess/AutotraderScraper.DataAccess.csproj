@@ -79,6 +79,10 @@
     <Compile Include="Migrations\201902112055593_AddDateEndedToArticle.Designer.cs">
       <DependentUpon>201902112055593_AddDateEndedToArticle.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902122313023_AddCaseSensitiveOnDealerName.cs" />
+    <Compile Include="Migrations\201902122313023_AddCaseSensitiveOnDealerName.Designer.cs">
+      <DependentUpon>201902122313023_AddCaseSensitiveOnDealerName.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -109,6 +113,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902112055593_AddDateEndedToArticle.resx">
       <DependentUpon>201902112055593_AddDateEndedToArticle.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902122313023_AddCaseSensitiveOnDealerName.resx">
+      <DependentUpon>201902122313023_AddCaseSensitiveOnDealerName.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -722,7 +722,9 @@ namespace AutotraderScraper
             {
                 try
                 {
-                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName));
+                    // Case sensitive.
+                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCulture));
+
                     if (dealer != null) return dealer;
                     dealer = new Dealer
                     {

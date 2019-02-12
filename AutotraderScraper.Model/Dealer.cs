@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AutotraderScraper.Model.Attributes;
 using AutotraderScraper.Model.Interfaces;
 
 namespace AutotraderScraper.Model
@@ -19,6 +20,7 @@ namespace AutotraderScraper.Model
 
         [MaxLength(450)]
         [Index(IsUnique = true)]
+        [CaseSensitive]
         public string Name { get; set; }
 
         public string Logo { get; set; }

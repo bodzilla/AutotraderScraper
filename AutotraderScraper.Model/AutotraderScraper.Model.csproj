@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Article.cs" />
     <Compile Include="ArticleVersion.cs" />
+    <Compile Include="Attributes\CaseSensitiveAttribute.cs" />
     <Compile Include="CarMake.cs" />
     <Compile Include="CarModel.cs" />
     <Compile Include="Dealer.cs" />
