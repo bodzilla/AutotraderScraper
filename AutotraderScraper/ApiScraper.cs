@@ -27,8 +27,24 @@ namespace AutotraderScraper
         private static readonly string ApiHistoryUrl;
         private static readonly string AutoTraderApiEndPoint;
         private static readonly Regex RemoveNonNumeric;
-
         private static readonly ApiArticleRepository ApiArticleRepo;
+        private static readonly MotResponseRepository MotRepo;
+        private static readonly MotTestRepository MotTestRepo;
+        private static readonly RfrAndCommentRepository RfrAndCommentRepo;
+        private static readonly TrackingRepository TrackingRepo;
+        private static readonly OdsRepository OdsRepo;
+        private static readonly PageDataRepository PageDataRepo;
+        private static readonly MetadatumRepository MetadatumRepo;
+        private static readonly SocialMediaLinksRepository SocialMediaLinksRepo;
+        private static readonly PreferencesRepository PreferencesRepo;
+        private static readonly InstantMessagingRepository InstantMessagingRepo;
+        private static readonly AdvertRepository AdvertRepo;
+        private static readonly ImageUrlsRepository ImageUrlsRepo;
+        private static readonly KeyFactsRepository KeyFactsRepo;
+        private static readonly VehicleRepository VehicleRepo;
+        private static readonly SellerRepository SellerRepo;
+        private static readonly FinanceRepository FinanceRepo;
+        private static readonly AutotraderResponseRepository AutotraderResponseRepo;
 
         static ApiScraper()
         {
@@ -44,28 +60,28 @@ namespace AutotraderScraper
             AutoTraderApiEndPoint = ConfigurationManager.AppSettings["ApiAutotraderEndPoint"];
             RemoveNonNumeric = new Regex(@"[^\d]");
             ApiArticleRepo = new ApiArticleRepository();
+            MotRepo = new MotResponseRepository();
+            MotTestRepo = new MotTestRepository();
+            RfrAndCommentRepo = new RfrAndCommentRepository();
+            TrackingRepo = new TrackingRepository();
+            OdsRepo = new OdsRepository();
+            PageDataRepo = new PageDataRepository();
+            MetadatumRepo = new MetadatumRepository();
+            SocialMediaLinksRepo = new SocialMediaLinksRepository();
+            PreferencesRepo = new PreferencesRepository();
+            InstantMessagingRepo = new InstantMessagingRepository();
+            AdvertRepo = new AdvertRepository();
+            ImageUrlsRepo = new ImageUrlsRepository();
+            KeyFactsRepo = new KeyFactsRepository();
+            VehicleRepo = new VehicleRepository();
+            SellerRepo = new SellerRepository();
+            FinanceRepo = new FinanceRepository();
+            AutotraderResponseRepo = new AutotraderResponseRepository();
         }
 
         public static string Run(params Article[] articles)
         {
             string msg = String.Empty;
-            MotResponseRepository motRepo = new MotResponseRepository();
-            MotTestRepository motTestRepo = new MotTestRepository();
-            RfrAndCommentRepository rfrAndCommentRepo = new RfrAndCommentRepository();
-            TrackingRepository trackingRepo = new TrackingRepository();
-            OdsRepository odsRepo = new OdsRepository();
-            PageDataRepository pageDataRepo = new PageDataRepository();
-            MetadatumRepository metadatumRepo = new MetadatumRepository();
-            SocialMediaLinksRepository socialMediaLinksRepo = new SocialMediaLinksRepository();
-            PreferencesRepository preferencesRepo = new PreferencesRepository();
-            InstantMessagingRepository instantMessagingRepo = new InstantMessagingRepository();
-            AdvertRepository advertRepo = new AdvertRepository();
-            ImageUrlsRepository imageUrlsRepo = new ImageUrlsRepository();
-            KeyFactsRepository keyFactsRepo = new KeyFactsRepository();
-            VehicleRepository vehicleRepo = new VehicleRepository();
-            SellerRepository sellerRepo = new SellerRepository();
-            FinanceRepository financeRepo = new FinanceRepository();
-            AutotraderResponseRepository autotraderResponseRepo = new AutotraderResponseRepository();
 
             foreach (Article article in articles)
             {
@@ -102,21 +118,21 @@ namespace AutotraderScraper
                     // Save MOT response.
                     IList<MotTest> motTests = motResponse.VirtualMotTests?.ToList();
                     motResponse.VirtualMotTests = null;
-                    motRepo.Create(motResponse);
+                    MotRepo.Create(motResponse);
 
                     foreach (MotTest motTest in motTests)
                     {
                         IList<RfrAndComment> rfrAndComments = motTest.VirtualRfrAndComments?.ToList();
                         motTest.VirtualRfrAndComments = null;
                         motTest.MotResponseId = motResponse.Id;
-                        motTestRepo.Create(motTest);
+                        MotTestRepo.Create(motTest);
 
                         foreach (RfrAndComment rfrAndComment in rfrAndComments)
                         {
                             rfrAndComment.MotTestId = motTest.Id;
                             rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
                             rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
-                            rfrAndCommentRepo.Create(rfrAndComment);
+                            RfrAndCommentRepo.Create(rfrAndComment);
                         }
                     }
 
@@ -125,18 +141,18 @@ namespace AutotraderScraper
                     if (advert != null)
                     {
                         Preferences preferences = autotraderResponse.Advert.InstantMessaging?.Preferences;
-                        if (preferences != null) preferencesRepo.Create(preferences);
+                        if (preferences != null) PreferencesRepo.Create(preferences);
 
                         InstantMessaging instantMessaging = autotraderResponse.Advert.InstantMessaging;
                         if (instantMessaging != null)
                         {
                             instantMessaging.Preferences = null;
                             instantMessaging.PreferencesId = preferences?.Id ?? null;
-                            instantMessagingRepo.Create(instantMessaging);
+                            InstantMessagingRepo.Create(instantMessaging);
                         }
 
                         SocialMediaLinks socialMediaLinks = autotraderResponse.Advert.SocialMediaLinks;
-                        if (socialMediaLinks != null) socialMediaLinksRepo.Create(socialMediaLinks);
+                        if (socialMediaLinks != null) SocialMediaLinksRepo.Create(socialMediaLinks);
 
                         advert.ImageUrls = null; // Just to keep tidy even though this has no effect.
                         advert.InstantMessaging = null;
@@ -144,7 +160,7 @@ namespace AutotraderScraper
                         advert.VirtualImageUrls = null;
                         advert.InstantMessagingId = instantMessaging?.Id ?? null;
                         advert.SocialMediaLinksId = socialMediaLinks?.Id ?? null;
-                        advertRepo.Create(advert);
+                        AdvertRepo.Create(advert);
 
                         if (autotraderResponse.Advert.ImageUrls != null)
                         {
@@ -155,23 +171,23 @@ namespace AutotraderScraper
                                     AdvertId = advert?.Id ?? null,
                                     Url = advertImageUrl
                                 };
-                                imageUrlsRepo.Create(imageUrls);
+                                ImageUrlsRepo.Create(imageUrls);
                             }
                         }
                     }
 
                     Finance finance = autotraderResponse.Finance;
-                    if (finance != null) financeRepo.Create(finance);
+                    if (finance != null) FinanceRepo.Create(finance);
 
                     Vehicle vehicle = autotraderResponse.Vehicle;
                     if (vehicle != null)
                     {
                         KeyFacts keyFacts = autotraderResponse.Vehicle.KeyFacts;
-                        if (keyFacts != null) keyFactsRepo.Create(keyFacts);
+                        if (keyFacts != null) KeyFactsRepo.Create(keyFacts);
 
                         vehicle.KeyFacts = null;
                         vehicle.KeyFactsId = keyFacts?.Id ?? null;
-                        vehicleRepo.Create(vehicle);
+                        VehicleRepo.Create(vehicle);
                     }
 
                     Seller seller = autotraderResponse.Seller;
@@ -182,8 +198,7 @@ namespace AutotraderScraper
                             autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl
                                 .Insert(0, "https://www.autotrader.co.uk");
                         }
-
-                        sellerRepo.Create(seller);
+                        SellerRepo.Create(seller);
                     }
 
                     PageData pageData = autotraderResponse.PageData;
@@ -193,15 +208,15 @@ namespace AutotraderScraper
                         Tracking tracking = autotraderResponse.PageData.Tracking;
                         Ods ods = autotraderResponse.PageData.Ods;
 
-                        if (tracking != null) trackingRepo.Create(tracking);
-                        if (ods != null) odsRepo.Create(ods);
+                        if (tracking != null) TrackingRepo.Create(tracking);
+                        if (ods != null) OdsRepo.Create(ods);
 
                         pageData.VirtualMetadatas = null;
                         pageData.Tracking = null;
                         pageData.Ods = null;
                         pageData.TrackingId = tracking?.Id ?? null;
                         pageData.OdsId = ods?.Id ?? null;
-                        pageDataRepo.Create(pageData);
+                        PageDataRepo.Create(pageData);
 
                         if (metadatums != null)
                         {
@@ -209,7 +224,7 @@ namespace AutotraderScraper
                             {
                                 metadatum.PageData = null;
                                 metadatum.PageDataId = pageData.Id;
-                                metadatumRepo.Create(metadatum);
+                                MetadatumRepo.Create(metadatum);
                             }
                         }
                     }
@@ -224,7 +239,7 @@ namespace AutotraderScraper
                     autotraderResponse.VehicleId = vehicle?.Id ?? null;
                     autotraderResponse.SellerId = seller?.Id ?? null;
                     autotraderResponse.PageDataId = pageData?.Id ?? null;
-                    autotraderResponseRepo.Create(autotraderResponse);
+                    AutotraderResponseRepo.Create(autotraderResponse);
 
                     // Add to parent object.
                     var apiArticle = new ApiArticle
