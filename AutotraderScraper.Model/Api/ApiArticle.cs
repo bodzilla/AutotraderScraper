@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using AutotraderScraper.Model.Api.Autotrader;
+using AutotraderScraper.Model.Api.Mot;
 using AutotraderScraper.Model.Interfaces;
 
 namespace AutotraderScraper.Model.Api
@@ -12,7 +14,17 @@ namespace AutotraderScraper.Model.Api
 
         public int ArticleId { get; set; }
 
+        public int AutotraderResponseId { get; set; }
+
+        public int MotResponseId { get; set; }
+
         [ForeignKey("ArticleId")]
         public virtual Article Article { get; set; }
+
+        [ForeignKey("AutotraderResponseId")]
+        public virtual AutotraderResponse AutotraderResponse { get; set; }
+
+        [ForeignKey("MotResponseId")]
+        public virtual MotResponse MotResponse { get; set; }
     }
 }
