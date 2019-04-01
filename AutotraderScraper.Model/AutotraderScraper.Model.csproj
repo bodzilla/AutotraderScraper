@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\ApiArticle.cs" />
     <Compile Include="Article.cs" />
     <Compile Include="ArticleVersion.cs" />
     <Compile Include="Attributes\CaseSensitiveAttribute.cs" />
@@ -64,8 +65,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Api\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

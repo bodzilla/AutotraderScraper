@@ -44,29 +44,5 @@ namespace AutotraderScraper.Model
 
         [ForeignKey("ArticleId")]
         public virtual Article VirtualArticle { get; set; }
-
-        public override string ToString()
-        {
-            string str = String.Empty;
-            str += $"Id: {Id}{Environment.NewLine}";
-            str += $"DateAdded: {DateAdded}{Environment.NewLine}";
-            str += $"ArticleId: {ArticleId}{Environment.NewLine}";
-            str += $"Version: {Version}{Environment.NewLine}";
-            str += $"Title: {Title}{Environment.NewLine}";
-            str += $"Teaser: {Teaser}{Environment.NewLine}";
-            str += $"Description: {Description}{Environment.NewLine}";
-            str += $"Year: {Year}{Environment.NewLine}";
-            str += $"BodyType: {BodyType}{Environment.NewLine}";
-            str += $"Mileage: {Mileage}{Environment.NewLine}";
-            str += $"TransmissionType: {TransmissionType}{Environment.NewLine}";
-            str += $"EngineSize: {EngineSize}{Environment.NewLine}";
-            str += $"Bhp: {Bhp}{Environment.NewLine}";
-            str += $"FuelType: {FuelType}{Environment.NewLine}";
-            str += $"SellerType: {SellerType}{Environment.NewLine}";
-            str += $"Location: {Location}{Environment.NewLine}";
-            str += $"Price: {Price}{Environment.NewLine}";
-            str += $"Updates: {Updates}";
-            return str;
-        }
     }
 }

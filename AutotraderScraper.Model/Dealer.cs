@@ -26,15 +26,5 @@ namespace AutotraderScraper.Model
         public string Logo { get; set; }
 
         public virtual ICollection<Article> VirtualArticles { get; set; }
-
-        public override string ToString()
-        {
-            string str = String.Empty;
-            str += $"Id: {Id}{Environment.NewLine}";
-            str += $"DateAdded: {DateAdded}{Environment.NewLine}";
-            str += $"Name: {Name}{Environment.NewLine}";
-            str += $"Logo: {Logo}{Environment.NewLine}";
-            return str;
-        }
     }
 }
