@@ -11,7 +11,7 @@ namespace AutotraderScraper.Model.Api.Autotrader
 
         public DateTime DateAdded { get; set; }
 
-        public int PageDataId { get; set; }
+        public int? PageDataId { get; set; }
 
         [ForeignKey("PageDataId")]
         public PageData PageData { get; set; }

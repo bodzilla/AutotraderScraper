@@ -14,9 +14,9 @@ namespace AutotraderScraper.Model.Api
 
         public int ArticleId { get; set; }
 
-        public int AutotraderResponseId { get; set; }
+        public int? AutotraderResponseId { get; set; }
 
-        public int MotResponseId { get; set; }
+        public int? MotResponseId { get; set; }
 
         [ForeignKey("ArticleId")]
         public virtual Article Article { get; set; }

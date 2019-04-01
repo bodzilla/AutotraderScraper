@@ -59,6 +59,7 @@
     <Compile Include="Api\Autotrader\Advert.cs" />
     <Compile Include="Api\Autotrader\AutotraderResponse.cs" />
     <Compile Include="Api\Autotrader\Finance.cs" />
+    <Compile Include="Api\Autotrader\ImageUrls.cs" />
     <Compile Include="Api\Autotrader\InstantMessaging.cs" />
     <Compile Include="Api\Autotrader\KeyFacts.cs" />
     <Compile Include="Api\Autotrader\Metadatum.cs" />

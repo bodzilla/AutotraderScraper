@@ -10,7 +10,7 @@ namespace AutotraderScraper.Model.Api.Mot
 
         public DateTime DateAdded { get; set; }
 
-        public int MotTestId { get; set; }
+        public int? MotTestId { get; set; }
 
         [ForeignKey("MotTestId")]
         public virtual MotTest MotTest { get; set; }

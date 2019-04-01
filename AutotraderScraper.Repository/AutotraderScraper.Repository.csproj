@@ -47,6 +47,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\ApiArticleRepository.cs" />
+    <Compile Include="Api\Autotrader\AdvertRepository.cs" />
+    <Compile Include="Api\Autotrader\AutotraderResponseRepository.cs" />
+    <Compile Include="Api\Autotrader\FinanceRepository.cs" />
+    <Compile Include="Api\Autotrader\ImageUrlsRepository.cs" />
+    <Compile Include="Api\Autotrader\InstantMessagingRepository.cs" />
+    <Compile Include="Api\Autotrader\KeyFactsRepository.cs" />
+    <Compile Include="Api\Autotrader\MetadatumRepository.cs" />
+    <Compile Include="Api\Autotrader\OdsRepository.cs" />
+    <Compile Include="Api\Autotrader\PageDataRepository.cs" />
+    <Compile Include="Api\Autotrader\PreferencesRepository.cs" />
+    <Compile Include="Api\Autotrader\SellerRepository.cs" />
+    <Compile Include="Api\Autotrader\SocialMediaLinksRepository.cs" />
+    <Compile Include="Api\Autotrader\TrackingRepository.cs" />
+    <Compile Include="Api\Autotrader\VehicleRepository.cs" />
+    <Compile Include="Api\Mot\MotResponseRepository.cs" />
+    <Compile Include="Api\Mot\MotTestRepository.cs" />
+    <Compile Include="Api\Mot\RfrAndCommentRepository.cs" />
     <Compile Include="ArticleRepository.cs" />
     <Compile Include="ArticleVersionRepository.cs" />
     <Compile Include="CarMakeRepository.cs" />

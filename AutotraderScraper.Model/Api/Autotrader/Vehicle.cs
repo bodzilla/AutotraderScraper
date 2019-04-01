@@ -17,7 +17,7 @@ namespace AutotraderScraper.Model.Api.Autotrader
 
         public DateTime DateAdded { get; set; }
 
-        public int KeyFactsId { get; set; }
+        public int? KeyFactsId { get; set; }
 
         [JsonProperty("make", NullValueHandling = NullValueHandling.Ignore)]
         public string Make { get; set; }

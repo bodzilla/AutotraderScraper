@@ -83,6 +83,22 @@
     <Compile Include="Migrations\201902122313023_AddCaseSensitiveOnDealerName.Designer.cs">
       <DependentUpon>201902122313023_AddCaseSensitiveOnDealerName.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904011401420_AddApiModels.cs" />
+    <Compile Include="Migrations\201904011401420_AddApiModels.Designer.cs">
+      <DependentUpon>201904011401420_AddApiModels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201904011540010_AddImageUrls.cs" />
+    <Compile Include="Migrations\201904011540010_AddImageUrls.Designer.cs">
+      <DependentUpon>201904011540010_AddImageUrls.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201904011850112_MakeApiForeignKeysNullable.cs" />
+    <Compile Include="Migrations\201904011850112_MakeApiForeignKeysNullable.Designer.cs">
+      <DependentUpon>201904011850112_MakeApiForeignKeysNullable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201904011857269_MakeApiArticleForeignKeysNullable.cs" />
+    <Compile Include="Migrations\201904011857269_MakeApiArticleForeignKeysNullable.Designer.cs">
+      <DependentUpon>201904011857269_MakeApiArticleForeignKeysNullable.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -116,6 +132,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902122313023_AddCaseSensitiveOnDealerName.resx">
       <DependentUpon>201902122313023_AddCaseSensitiveOnDealerName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904011401420_AddApiModels.resx">
+      <DependentUpon>201904011401420_AddApiModels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904011540010_AddImageUrls.resx">
+      <DependentUpon>201904011540010_AddImageUrls.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904011850112_MakeApiForeignKeysNullable.resx">
+      <DependentUpon>201904011850112_MakeApiForeignKeysNullable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904011857269_MakeApiArticleForeignKeysNullable.resx">
+      <DependentUpon>201904011857269_MakeApiArticleForeignKeysNullable.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

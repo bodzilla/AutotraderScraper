@@ -20,9 +20,9 @@ namespace AutotraderScraper.Model.Api.Autotrader
 
         public virtual ICollection<AutotraderResponse> VirtualAutotraderResponses { get; set; }
 
-        public int OdsId { get; set; }
+        public int? OdsId { get; set; }
 
-        public int TrackingId { get; set; }
+        public int? TrackingId { get; set; }
 
         [ForeignKey("OdsId")]
         [JsonProperty("ods", NullValueHandling = NullValueHandling.Ignore)]

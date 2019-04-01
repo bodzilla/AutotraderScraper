@@ -17,15 +17,15 @@ namespace AutotraderScraper.Model.Api.Autotrader
 
         public DateTime DateAdded { get; set; }
 
-        public int VehicleId { get; set; }
+        public int? VehicleId { get; set; }
 
-        public int AdvertId { get; set; }
+        public int? AdvertId { get; set; }
 
-        public int SellerId { get; set; }
+        public int? SellerId { get; set; }
 
-        public int FinanceId { get; set; }
+        public int? FinanceId { get; set; }
 
-        public int PageDataId { get; set; }
+        public int? PageDataId { get; set; }
 
         [ForeignKey("VehicleId")]
         [JsonProperty("vehicle", NullValueHandling = NullValueHandling.Ignore)]

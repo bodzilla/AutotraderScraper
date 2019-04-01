@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AutotraderScraper.Model.Interfaces;
+using Newtonsoft.Json;
 
 namespace AutotraderScraper.Model.Api.Mot
 {
@@ -34,6 +35,7 @@ namespace AutotraderScraper.Model.Api.Mot
 
         public DateTime? MotTestExpiryDate { get; set; }
 
+        [JsonProperty("motTests", NullValueHandling = NullValueHandling.Ignore)]
         public virtual ICollection<MotTest> VirtualMotTests { get; set; }
 
         public virtual ICollection<ApiArticle> VirtualApiArticles { get; set; }

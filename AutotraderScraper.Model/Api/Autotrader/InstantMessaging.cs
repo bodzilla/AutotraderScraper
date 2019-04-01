@@ -17,7 +17,7 @@ namespace AutotraderScraper.Model.Api.Autotrader
 
         public DateTime DateAdded { get; set; }
 
-        public int PreferencesId { get; set; }
+        public int? PreferencesId { get; set; }
 
         [ForeignKey("PreferencesId")]
         [JsonProperty("preferences", NullValueHandling = NullValueHandling.Ignore)]

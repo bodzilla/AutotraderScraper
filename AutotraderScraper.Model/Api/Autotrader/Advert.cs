@@ -11,15 +11,16 @@ namespace AutotraderScraper.Model.Api.Autotrader
         public Advert()
         {
             VirtualAutotraderResponses = new HashSet<AutotraderResponse>();
+            VirtualImageUrls = new HashSet<ImageUrls>();
         }
 
         public int Id { get; set; }
 
         public DateTime DateAdded { get; set; }
 
-        public int InstantMessagingId { get; set; }
+        public int? InstantMessagingId { get; set; }
 
-        public int SocialMediaLinksId { get; set; }
+        public int? SocialMediaLinksId { get; set; }
 
         [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
         public string Description { get; set; }
@@ -78,5 +79,7 @@ namespace AutotraderScraper.Model.Api.Autotrader
         public bool? HasGalleryDealerBanner { get; set; }
 
         public virtual ICollection<AutotraderResponse> VirtualAutotraderResponses { get; set; }
+
+        public virtual ICollection<ImageUrls> VirtualImageUrls { get; set; }
     }
 }

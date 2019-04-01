@@ -35,7 +35,7 @@ namespace AutotraderScraper
 
                     // Get scrape lists with respective page counts.
                     string[][] scrapeListArray = ConfigurationManager.AppSettings.AllKeys
-                        .Where(key => key.Contains("Scrape"))
+                        .Where(key => key.StartsWith("Scrape"))
                         .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
                         .ToArray();
 

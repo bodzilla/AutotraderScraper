@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using AutotraderScraper.Model.Interfaces;
+using Newtonsoft.Json;
 
 namespace AutotraderScraper.Model.Api.Mot
 {
+    [JsonObject("motTests", ItemNullValueHandling = NullValueHandling.Ignore)]
     public class MotTest : IBaseModel
     {
         public MotTest()
@@ -16,7 +18,7 @@ namespace AutotraderScraper.Model.Api.Mot
 
         public DateTime DateAdded { get; set; }
 
-        public int MotResponseId { get; set; }
+        public int? MotResponseId { get; set; }
 
         public DateTime? CompletedDate { get; set; }
 
@@ -30,6 +32,7 @@ namespace AutotraderScraper.Model.Api.Mot
 
         public long MotTestNumber { get; set; }
 
+        [JsonProperty("rfrAndComments", NullValueHandling = NullValueHandling.Ignore)]
         public virtual ICollection<RfrAndComment> VirtualRfrAndComments { get; set; }
 
         [ForeignKey("MotResponseId")]

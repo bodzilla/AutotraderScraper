@@ -31,6 +31,7 @@ namespace AutotraderScraper
         private readonly IList<string> _transmissionTypesList;
         private readonly HashSet<Article> _articleList;
         private readonly HashSet<string> _articleLinksList;
+        private readonly bool _useProxy;
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
@@ -67,7 +68,8 @@ namespace AutotraderScraper
             _dealerCountVideo = new Regex("Video");
 
             // Load settings.
-            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
+            _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxyScraper"]);
+            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleepScraper"]);
             _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
             _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
             _useRandomPostCode = bool.Parse(ConfigurationManager.AppSettings["UseRandomPostCode"]);
@@ -143,13 +145,13 @@ namespace AutotraderScraper
                             // Ensure results are populated after web request.
                             while (results == null && String.IsNullOrWhiteSpace(noResults))
                             {
-                                data = Proxy.MakeRequest(currentPage);
+                                data = Proxy.MakeWebRequest(currentPage, _useProxy, false);
 
                                 // Parse response as HTML document.
                                 HtmlDocument doc = new HtmlDocument();
                                 doc.LoadHtml(data);
                                 results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
-                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]").InnerText.Trim();
+                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]")?.InnerText.Trim();
                             }
 
                             if (results == null && !String.IsNullOrWhiteSpace(noResults))
@@ -650,12 +652,17 @@ namespace AutotraderScraper
                                 articleVersion.Updates = updates;
                                 _articleVersionRepo.Create(articleVersion);
 
+                                string apiMsg;
+
                                 // Add to hash sets.
                                 if (dbArticle == null)
                                 {
                                     article.VirtualArticleVersions.Add(articleVersion);
                                     _articleList.Add(article);
                                     _articleLinksList.Add(link);
+
+                                    // Now scrape APIs.
+                                    apiMsg = ApiScraper.Run(article);
                                 }
                                 else
                                 {
@@ -663,9 +670,12 @@ namespace AutotraderScraper
                                     _articleList.Remove(dbArticle);
                                     dbArticle.VirtualArticleVersions.Add(articleVersion);
                                     _articleList.Add(dbArticle);
+
+                                    // Now scrape APIs.
+                                    apiMsg = ApiScraper.Run(dbArticle);
                                 }
 
-                                _log.Info($"Saved new article version with {articleState} article.");
+                                _log.Info($"Saved new article version with {articleState} article and {apiMsg}.");
                             }
                             catch (Exception ex)
                             {

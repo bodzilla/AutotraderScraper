@@ -14,6 +14,7 @@ namespace AutotraderScraper
     {
         private readonly ILog _log;
         private readonly ArticleRepository _articleRepo;
+        private readonly bool _useProxy;
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
@@ -25,7 +26,8 @@ namespace AutotraderScraper
             _articleRepo = new ArticleRepository();
 
             // Load settings.
-            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
+            _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxyScraper"]);
+            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleepScraper"]);
             _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
             _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
         }
@@ -56,7 +58,7 @@ namespace AutotraderScraper
 
                         try
                         {
-                            data = Proxy.MakeRequest(link);
+                            data = Proxy.MakeWebRequest(link, _useProxy, false);
                         }
                         catch (Exception ex)
                         {
