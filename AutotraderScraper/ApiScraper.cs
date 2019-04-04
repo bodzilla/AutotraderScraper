@@ -203,6 +203,7 @@ namespace AutotraderScraper
                         autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl
                             .Insert(0, "https://www.autotrader.co.uk");
                     }
+                    if (seller.BannerUrl != null && seller.BannerUrl.Contains("images/null")) seller.BannerUrl = null;
                     SellerRepo.Create(seller);
                 }
 
