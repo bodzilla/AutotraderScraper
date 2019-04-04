@@ -99,6 +99,14 @@
     <Compile Include="Migrations\201904011857269_MakeApiArticleForeignKeysNullable.Designer.cs">
       <DependentUpon>201904011857269_MakeApiArticleForeignKeysNullable.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904031449057_ChangeApiArticleToApiArticleVersion.cs" />
+    <Compile Include="Migrations\201904031449057_ChangeApiArticleToApiArticleVersion.Designer.cs">
+      <DependentUpon>201904031449057_ChangeApiArticleToApiArticleVersion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201904031451574_ChangeApiArticleToApiArticleVersionTableName.cs" />
+    <Compile Include="Migrations\201904031451574_ChangeApiArticleToApiArticleVersionTableName.Designer.cs">
+      <DependentUpon>201904031451574_ChangeApiArticleToApiArticleVersionTableName.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -144,6 +152,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201904011857269_MakeApiArticleForeignKeysNullable.resx">
       <DependentUpon>201904011857269_MakeApiArticleForeignKeysNullable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904031449057_ChangeApiArticleToApiArticleVersion.resx">
+      <DependentUpon>201904031449057_ChangeApiArticleToApiArticleVersion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904031451574_ChangeApiArticleToApiArticleVersionTableName.resx">
+      <DependentUpon>201904031451574_ChangeApiArticleToApiArticleVersionTableName.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -10,7 +10,7 @@ namespace AutotraderScraper.Model.Api.Autotrader
     {
         public AutotraderResponse()
         {
-            VirtualApiArticles = new HashSet<ApiArticle>();
+            VirtualApiArticles = new HashSet<ApiArticleVersion>();
         }
 
         public int Id { get; set; }
@@ -47,6 +47,6 @@ namespace AutotraderScraper.Model.Api.Autotrader
         [JsonProperty("pageData", NullValueHandling = NullValueHandling.Ignore)]
         public virtual PageData PageData { get; set; }
 
-        public virtual ICollection<ApiArticle> VirtualApiArticles { get; set; }
+        public virtual ICollection<ApiArticleVersion> VirtualApiArticles { get; set; }
     }
 }

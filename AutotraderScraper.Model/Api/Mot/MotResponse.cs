@@ -9,7 +9,7 @@ namespace AutotraderScraper.Model.Api.Mot
     {
         public MotResponse()
         {
-            VirtualApiArticles = new HashSet<ApiArticle>();
+            VirtualApiArticles = new HashSet<ApiArticleVersion>();
             VirtualMotTests = new HashSet<MotTest>();
         }
 
@@ -38,6 +38,6 @@ namespace AutotraderScraper.Model.Api.Mot
         [JsonProperty("motTests", NullValueHandling = NullValueHandling.Ignore)]
         public virtual ICollection<MotTest> VirtualMotTests { get; set; }
 
-        public virtual ICollection<ApiArticle> VirtualApiArticles { get; set; }
+        public virtual ICollection<ApiArticleVersion> VirtualApiArticles { get; set; }
     }
 }

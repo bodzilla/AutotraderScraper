@@ -55,7 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\ApiArticle.cs" />
+    <Compile Include="Api\ApiArticleVersion.cs" />
     <Compile Include="Api\Autotrader\Advert.cs" />
     <Compile Include="Api\Autotrader\AutotraderResponse.cs" />
     <Compile Include="Api\Autotrader\Finance.cs" />

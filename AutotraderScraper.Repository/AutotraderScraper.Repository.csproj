@@ -47,7 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\ApiArticleRepository.cs" />
+    <Compile Include="Api\ApiArticleVersionRepository.cs" />
     <Compile Include="Api\Autotrader\AdvertRepository.cs" />
     <Compile Include="Api\Autotrader\AutotraderResponseRepository.cs" />
     <Compile Include="Api\Autotrader\FinanceRepository.cs" />

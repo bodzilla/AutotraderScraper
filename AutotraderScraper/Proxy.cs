@@ -106,23 +106,34 @@ namespace AutotraderScraper
 
         public static string MakeApiRequest(string url)
         {
-            string motData;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = SetUserAgent(false);
-            request.Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
-            request.ReadWriteTimeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Headers.Add("x-api-key", ApiKey);
+            string motData = String.Empty;
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            try
             {
-                using (Stream stream = response.GetResponseStream())
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
+                request.ReadWriteTimeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
+                request.Method = "GET";
+                request.ContentType = @"application/json";
+                request.Headers.Add(@"x-api-key", ApiKey);
+
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                 {
-                    using (StreamReader reader = new StreamReader(stream ?? throw new InvalidOperationException("Stream returns null.")))
+                    using (Stream stream = response.GetResponseStream())
                     {
-                        motData = reader.ReadToEnd();
+                        using (StreamReader reader =
+                            new StreamReader(stream ?? throw new InvalidOperationException("Stream returns null.")))
+                        {
+                            motData = reader.ReadToEnd();
+                        }
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("The server committed a protocol violation"))
+                {
+                    MakeApiRequest(url);
                 }
             }
             return motData;
@@ -161,7 +172,7 @@ namespace AutotraderScraper
             return data;
         }
 
-        private static void Next()
+        public static void Next()
         {
             string ipAndPort = ProxyList.Pop();
             _ip = ipAndPort.Split(':')[0];

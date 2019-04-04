@@ -6,25 +6,25 @@ using AutotraderScraper.Model.Interfaces;
 
 namespace AutotraderScraper.Model.Api
 {
-    public class ApiArticle : IBaseModel
+    public class ApiArticleVersion : IBaseModel
     {
         public int Id { get; set; }
 
         public DateTime DateAdded { get; set; }
 
-        public int ArticleId { get; set; }
+        public int ArticleVersionId { get; set; }
 
         public int? AutotraderResponseId { get; set; }
 
         public int? MotResponseId { get; set; }
 
-        [ForeignKey("ArticleId")]
-        public virtual Article Article { get; set; }
+        [ForeignKey("ArticleVersionId")]
+        public virtual ArticleVersion VirtualArticleVersion { get; set; }
 
         [ForeignKey("AutotraderResponseId")]
-        public virtual AutotraderResponse AutotraderResponse { get; set; }
+        public virtual AutotraderResponse VirtualAutotraderResponse { get; set; }
 
         [ForeignKey("MotResponseId")]
-        public virtual MotResponse MotResponse { get; set; }
+        public virtual MotResponse VirtualMotResponse { get; set; }
     }
 }

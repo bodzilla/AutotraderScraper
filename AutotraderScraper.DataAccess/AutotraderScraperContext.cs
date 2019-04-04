@@ -32,7 +32,7 @@ namespace AutotraderScraper.DataAccess
             modelBuilder.Entity<Article>().ToTable("Article");
             modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersion");
 
-            modelBuilder.Entity<ApiArticle>().ToTable("ApiArticle");
+            modelBuilder.Entity<ApiArticleVersion>().ToTable("ApiArticleVersion");
 
             modelBuilder.Entity<AutotraderResponse>().ToTable("AutotraderResponse");
             modelBuilder.Entity<Advert>().ToTable("Advert");

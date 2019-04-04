@@ -152,6 +152,9 @@ namespace AutotraderScraper
                                 doc.LoadHtml(data);
                                 results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
                                 noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]")?.InnerText.Trim();
+
+                                // Check here also to stop same proxy loop.
+                                if (results == null && String.IsNullOrWhiteSpace(noResults)) Proxy.Next();
                             }
 
                             if (results == null && !String.IsNullOrWhiteSpace(noResults))
@@ -652,7 +655,8 @@ namespace AutotraderScraper
                                 articleVersion.Updates = updates;
                                 _articleVersionRepo.Create(articleVersion);
 
-                                string apiMsg;
+                                // Now scrape APIs.
+                                string apiMsg = ApiScraper.Run(articleVersion, article.Link);
 
                                 // Add to hash sets.
                                 if (dbArticle == null)
@@ -660,9 +664,6 @@ namespace AutotraderScraper
                                     article.VirtualArticleVersions.Add(articleVersion);
                                     _articleList.Add(article);
                                     _articleLinksList.Add(link);
-
-                                    // Now scrape APIs.
-                                    apiMsg = ApiScraper.Run(article);
                                 }
                                 else
                                 {
@@ -670,9 +671,6 @@ namespace AutotraderScraper
                                     _articleList.Remove(dbArticle);
                                     dbArticle.VirtualArticleVersions.Add(articleVersion);
                                     _articleList.Add(dbArticle);
-
-                                    // Now scrape APIs.
-                                    apiMsg = ApiScraper.Run(dbArticle);
                                 }
 
                                 _log.Info($"Saved new article version with {articleState} article and {apiMsg}.");
