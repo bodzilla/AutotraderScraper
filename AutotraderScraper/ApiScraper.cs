@@ -83,9 +83,8 @@ namespace AutotraderScraper
             AutotraderResponseRepo = new AutotraderResponseRepository();
         }
 
-        public static string Run(ArticleVersion articleVersion, string link)
+        public static void Run(ArticleVersion articleVersion, string link)
         {
-            string msg;
             MotResponse motResponse = new MotResponse();
 
             try
@@ -102,7 +101,7 @@ namespace AutotraderScraper
 
                 // Call Autotrader API.
                 string autotraderData = Proxy.MakeWebRequest(link, UseProxy, false);
-                if (String.IsNullOrWhiteSpace(autotraderData)) return "without API article version";
+                if (String.IsNullOrWhiteSpace(autotraderData)) return;
 
                 // Convert to response.
                 var autotraderResponse = JToken.Parse(autotraderData).ToObject<AutotraderResponse>();
@@ -256,14 +255,12 @@ namespace AutotraderScraper
                 };
 
                 ApiArticleVersionRepo.Create(apiArticleVersion);
-                msg = "with API article version";
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
-                msg = "without API article version";
+                if (!ex.Message.Contains("404")) throw;
+                Log.Warn("Could not save API article due to error that is not a 404.", ex);
             }
-            return msg;
         }
     }
 }

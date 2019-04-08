@@ -655,8 +655,15 @@ namespace AutotraderScraper
                                 articleVersion.Updates = updates;
                                 _articleVersionRepo.Create(articleVersion);
 
-                                // Now scrape APIs.
-                                string apiMsg = ApiScraper.Run(articleVersion, article.Link);
+                                // Now scrape API.
+                                try
+                                {
+                                    ApiScraper.Run(articleVersion, article.Link);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _log.Error("Failed to save API article.", ex);
+                                }
 
                                 // Add to hash sets.
                                 if (dbArticle == null)
@@ -673,7 +680,7 @@ namespace AutotraderScraper
                                     _articleList.Add(dbArticle);
                                 }
 
-                                _log.Info($"Saved new article version with {articleState} article and {apiMsg}.");
+                                _log.Info($"Saved new article version with {articleState} article and new API article.");
                             }
                             catch (Exception ex)
                             {
