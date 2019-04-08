@@ -107,41 +107,44 @@ namespace AutotraderScraper
                 var autotraderResponse = JToken.Parse(autotraderData).ToObject<AutotraderResponse>();
 
                 // Call MOT API.
-                string url = $"{ApiHistoryUrl}{autotraderResponse.Vehicle.Vrm}";
-                string motDataString = Proxy.MakeApiRequest(url);
-                if (!String.IsNullOrWhiteSpace(motDataString))
+                if (autotraderResponse?.Vehicle?.Vrm != null)
                 {
-                    var motData = JToken.Parse(motDataString);
-                    motResponse = JToken.Parse(motData[0].ToString()).ToObject<MotResponse>();
-                }
-
-                // Save MOT response.
-                IList<MotTest> motTests = motResponse.VirtualMotTests?.ToList();
-                motResponse.VirtualMotTests = null;
-                MotRepo.Create(motResponse);
-
-                if (motTests != null)
-                {
-                    foreach (MotTest motTest in motTests)
+                    string url = $"{ApiHistoryUrl}{autotraderResponse.Vehicle.Vrm}";
+                    string motDataString = Proxy.MakeApiRequest(url);
+                    if (!String.IsNullOrWhiteSpace(motDataString))
                     {
-                        IList<RfrAndComment> rfrAndComments = motTest.VirtualRfrAndComments?.ToList();
-                        motTest.VirtualRfrAndComments = null;
-                        motTest.MotResponseId = motResponse.Id;
-                        MotTestRepo.Create(motTest);
+                        var motData = JToken.Parse(motDataString);
+                        motResponse = JToken.Parse(motData[0].ToString()).ToObject<MotResponse>();
+                    }
 
-                        if (rfrAndComments == null) continue;
-                        foreach (RfrAndComment rfrAndComment in rfrAndComments)
+                    // Save MOT response.
+                    IList<MotTest> motTests = motResponse.VirtualMotTests?.ToList();
+                    motResponse.VirtualMotTests = null;
+                    MotRepo.Create(motResponse);
+
+                    if (motTests != null)
+                    {
+                        foreach (MotTest motTest in motTests)
                         {
-                            rfrAndComment.MotTestId = motTest.Id;
-                            rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
-                            rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
-                            RfrAndCommentRepo.Create(rfrAndComment);
+                            IList<RfrAndComment> rfrAndComments = motTest.VirtualRfrAndComments?.ToList();
+                            motTest.VirtualRfrAndComments = null;
+                            motTest.MotResponseId = motResponse.Id;
+                            MotTestRepo.Create(motTest);
+
+                            if (rfrAndComments == null) continue;
+                            foreach (RfrAndComment rfrAndComment in rfrAndComments)
+                            {
+                                rfrAndComment.MotTestId = motTest.Id;
+                                rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
+                                rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
+                                RfrAndCommentRepo.Create(rfrAndComment);
+                            }
                         }
                     }
                 }
 
                 // Save Autotrader response.
-                Advert advert = autotraderResponse.Advert;
+                Advert advert = autotraderResponse?.Advert;
                 if (advert != null)
                 {
                     Preferences preferences = autotraderResponse.Advert.InstantMessaging?.Preferences;
@@ -180,7 +183,7 @@ namespace AutotraderScraper
                     }
                 }
 
-                Finance finance = autotraderResponse.Finance;
+                Finance finance = autotraderResponse?.Finance;
                 if (finance != null) FinanceRepo.Create(finance);
 
                 Vehicle vehicle = autotraderResponse.Vehicle;
