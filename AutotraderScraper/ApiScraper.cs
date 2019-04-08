@@ -250,14 +250,12 @@ namespace AutotraderScraper
                 AutotraderResponseRepo.Create(autotraderResponse);
 
                 // Add to parent object.
-                var apiArticleVersion = new ApiArticleVersion
+                ApiArticleVersionRepo.Create(new ApiArticleVersion
                 {
                     ArticleVersionId = articleVersion.Id,
                     AutotraderResponseId = autotraderResponse.Id,
                     MotResponseId = motResponse?.Id ?? null
-                };
-
-                ApiArticleVersionRepo.Create(apiArticleVersion);
+                });
             }
             catch (Exception ex)
             {

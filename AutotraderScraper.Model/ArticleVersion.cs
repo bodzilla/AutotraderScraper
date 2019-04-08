@@ -1,11 +1,18 @@
 ﻿using AutotraderScraper.Model.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using AutotraderScraper.Model.Api;
 
 namespace AutotraderScraper.Model
 {
     public class ArticleVersion : IBaseModel
     {
+        public ArticleVersion()
+        {
+            VirtualApiArticleVersions = new HashSet<ApiArticleVersion>();
+        }
+
         public int Id { get; set; }
 
         public DateTime DateAdded { get; set; }
@@ -44,5 +51,7 @@ namespace AutotraderScraper.Model
 
         [ForeignKey("ArticleId")]
         public virtual Article VirtualArticle { get; set; }
+
+        public virtual ICollection<ApiArticleVersion> VirtualApiArticleVersions { get; set; }
     }
 }

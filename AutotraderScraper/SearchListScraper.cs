@@ -103,7 +103,7 @@ namespace AutotraderScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions, x => x.VirtualDealer));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions, x => x.VirtualDealer, x => x.VirtualArticleVersions.Select(y => y.VirtualApiArticleVersions)));
                 _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId).Select(x => x.Link));
                 if (DealerList.Count < 1) DealerList.UnionWith(_dealerRepo.GetAll(x => x.VirtualArticles));
 
@@ -414,11 +414,14 @@ namespace AutotraderScraper
 
                             if (articleLinkExists)
                             {
+                                int dbApiArticleVersionCount;
+
                                 try
                                 {
                                     // Set existing article and latest article version.
                                     dbArticle = _articleList.Single(x => x.Link == link);
                                     dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
+                                    dbApiArticleVersionCount = dbArticle.VirtualArticleVersions.Count;
                                     dbDealer = dbArticle.VirtualDealer;
                                 }
                                 catch (Exception)
@@ -563,6 +566,15 @@ namespace AutotraderScraper
                                     // Check if the hashes are a match, if so then skip.
                                     if (String.Equals(dbHash, hash))
                                     {
+                                        // If there's no API article versions, let's see if we can find scrape one.
+                                        try
+                                        {
+                                            if (dbApiArticleVersionCount < 1) ApiScraper.Run(dbArticleVersion, dbArticle.Link);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _log.Error("Failed to save API article version for existing article version.", ex);
+                                        }
                                         _log.Info("Skipped duplicate article.");
                                         continue;
                                     }
@@ -662,7 +674,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Failed to save API article.", ex);
+                                    _log.Error("Failed to save API article version for new article version.", ex);
                                 }
 
                                 // Add to hash sets.
