@@ -35,6 +35,7 @@ namespace AutotraderScraper
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
+        private readonly string _defaultLocation;
         private readonly bool _useRandomPostCode;
         private readonly string _noImageLink;
         private readonly Regex _replacePostCode;
@@ -72,6 +73,7 @@ namespace AutotraderScraper
             _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleepScraper"]);
             _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
             _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+            _defaultLocation = ConfigurationManager.AppSettings["DefaultLocation"];
             _useRandomPostCode = bool.Parse(ConfigurationManager.AppSettings["UseRandomPostCode"]);
             _postCodes = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("PstCde")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
@@ -218,7 +220,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception)
                                 {
-                                    location = ConfigurationManager.AppSettings["DefaultLocation"];
+                                    location = _defaultLocation;
                                 }
 
                                 try

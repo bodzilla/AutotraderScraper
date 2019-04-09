@@ -29,6 +29,7 @@ namespace AutotraderScraper
         private static readonly Regex RemoveNonNumeric;
         private static readonly Regex ImageResizeFind;
         private static readonly string ImageResizeReplace;
+        private static readonly string DefaultLocation;
         private static readonly ApiArticleVersionRepository ApiArticleVersionRepo;
         private static readonly MotResponseRepository MotRepo;
         private static readonly MotTestRepository MotTestRepo;
@@ -63,6 +64,7 @@ namespace AutotraderScraper
             RemoveNonNumeric = new Regex(@"[^\d]");
             ImageResizeFind = new Regex(ConfigurationManager.AppSettings["AutotraderImageResizeRegexFind"]);
             ImageResizeReplace = ConfigurationManager.AppSettings["AutotraderImageResizeRegexReplace"];
+            DefaultLocation = ConfigurationManager.AppSettings["DefaultLocation"];
             ApiArticleVersionRepo = new ApiArticleVersionRepository();
             MotRepo = new MotResponseRepository();
             MotTestRepo = new MotTestRepository();
@@ -206,6 +208,7 @@ namespace AutotraderScraper
                 {
                     if (!String.IsNullOrWhiteSpace(autotraderResponse.Seller.ProfileUrl)) autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl.Insert(0, "https://www.autotrader.co.uk");
                     if (!String.IsNullOrWhiteSpace(seller.BannerUrl) && seller.BannerUrl.Contains("images/null")) seller.BannerUrl = null;
+                    if (!String.IsNullOrWhiteSpace(seller.TownAndDistance)) seller.TownAndDistance = DefaultLocation;
                     SellerRepo.Create(seller);
                 }
 
