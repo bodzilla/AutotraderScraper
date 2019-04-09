@@ -416,12 +416,15 @@ namespace AutotraderScraper
 
                             if (articleLinkExists)
                             {
+                                int dbApiArticleVersionCount;
+
                                 try
                                 {
                                     // Set existing article and latest article version.
                                     dbArticle = _articleList.Single(x => x.Link == link);
                                     dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
                                     dbDealer = dbArticle.VirtualDealer;
+                                    dbApiArticleVersionCount = dbArticleVersion?.VirtualApiArticleVersions.Count ?? 0;
                                 }
                                 catch (Exception)
                                 {
@@ -568,14 +571,20 @@ namespace AutotraderScraper
                                         // If there's no API article versions, let's see if we can find scrape one.
                                         try
                                         {
-                                            if (dbArticleVersion != null && dbArticleVersion.Id > 0 && !String.IsNullOrWhiteSpace(dbArticle.Link))
+                                            if (dbArticleVersion != null && dbArticleVersion.Id > 0 && !String.IsNullOrWhiteSpace(dbArticle.Link) && dbApiArticleVersionCount < 1)
+                                            {
                                                 ApiScraper.Run(dbArticleVersion.Id, dbArticle.Link);
+                                                _log.Info("Saved new API article version with existing article version.");
+                                            }
+                                            else
+                                            {
+                                                _log.Info("Skipped duplicate article.");
+                                            }
                                         }
                                         catch (Exception ex)
                                         {
                                             _log.Error("Failed to save API article version for existing article version.", ex);
                                         }
-                                        _log.Info("Skipped duplicate article.");
                                         continue;
                                     }
 
@@ -670,8 +679,7 @@ namespace AutotraderScraper
                                 // Now scrape API.
                                 try
                                 {
-                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link))
-                                        ApiScraper.Run(articleVersion.Id, article.Link);
+                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link)) ApiScraper.Run(articleVersion.Id, article.Link);
                                 }
                                 catch (Exception ex)
                                 {
