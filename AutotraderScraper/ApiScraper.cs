@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using AutotraderScraper.Model;
 using AutotraderScraper.Model.Api;
 using AutotraderScraper.Model.Api.Autotrader;
 using AutotraderScraper.Model.Api.Mot;
@@ -85,7 +84,7 @@ namespace AutotraderScraper
             AutotraderResponseRepo = new AutotraderResponseRepository();
         }
 
-        public static void Run(ArticleVersion articleVersion, string link)
+        public static void Run(int articleVersionId, string link)
         {
             MotResponse motResponse = new MotResponse();
 
@@ -255,7 +254,7 @@ namespace AutotraderScraper
                 // Add to parent object.
                 ApiArticleVersionRepo.Create(new ApiArticleVersion
                 {
-                    ArticleVersionId = articleVersion.Id,
+                    ArticleVersionId = articleVersionId,
                     AutotraderResponseId = autotraderResponse.Id,
                     MotResponseId = motResponse?.Id ?? null
                 });

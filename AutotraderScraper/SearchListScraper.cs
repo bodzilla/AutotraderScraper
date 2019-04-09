@@ -416,14 +416,11 @@ namespace AutotraderScraper
 
                             if (articleLinkExists)
                             {
-                                int dbApiArticleVersionCount;
-
                                 try
                                 {
                                     // Set existing article and latest article version.
                                     dbArticle = _articleList.Single(x => x.Link == link);
                                     dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
-                                    dbApiArticleVersionCount = dbArticle.VirtualArticleVersions.Count;
                                     dbDealer = dbArticle.VirtualDealer;
                                 }
                                 catch (Exception)
@@ -571,8 +568,8 @@ namespace AutotraderScraper
                                         // If there's no API article versions, let's see if we can find scrape one.
                                         try
                                         {
-                                            if (dbArticleVersion.Id < 1 || String.IsNullOrWhiteSpace(dbArticle.Link)) throw new Exception("Article version id or article link missing.");
-                                            if (dbApiArticleVersionCount < 1) ApiScraper.Run(dbArticleVersion, dbArticle.Link);
+                                            if (dbArticleVersion != null && dbArticleVersion.Id > 0 && !String.IsNullOrWhiteSpace(dbArticle.Link))
+                                                ApiScraper.Run(dbArticleVersion.Id, dbArticle.Link);
                                         }
                                         catch (Exception ex)
                                         {
@@ -673,8 +670,8 @@ namespace AutotraderScraper
                                 // Now scrape API.
                                 try
                                 {
-                                    if (articleVersion.Id < 1 || String.IsNullOrWhiteSpace(article.Link)) throw new Exception("Article version id or article link missing.");
-                                    ApiScraper.Run(articleVersion, article.Link);
+                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link))
+                                        ApiScraper.Run(articleVersion.Id, article.Link);
                                 }
                                 catch (Exception ex)
                                 {
