@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using AutotraderScraper.Model;
+using AutotraderScraper.Model.Api;
 using AutotraderScraper.Repository;
 using HtmlAgilityPack;
 using log4net;
@@ -573,7 +574,13 @@ namespace AutotraderScraper
                                         {
                                             if (dbArticleVersion != null && dbArticleVersion.Id > 0 && !String.IsNullOrWhiteSpace(dbArticle.Link) && dbApiArticleVersionCount < 1)
                                             {
-                                                ApiScraper.Run(dbArticleVersion.Id, dbArticle.Link);
+                                                ApiArticleVersion apiArticleVersion = ApiScraper.Run(dbArticleVersion.Id, dbArticle.Link);
+
+                                                // Remove and add the article again with the new API article version.
+                                                _articleList.Remove(dbArticle);
+                                                dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
+                                                _articleList.Add(dbArticle);
+
                                                 _log.Info("Saved new API article version with existing article version.");
                                             }
                                             else
@@ -677,9 +684,11 @@ namespace AutotraderScraper
                                 _articleVersionRepo.Create(articleVersion);
 
                                 // Now scrape API.
+                                ApiArticleVersion apiArticleVersion = new ApiArticleVersion();
                                 try
                                 {
-                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link)) ApiScraper.Run(articleVersion.Id, article.Link);
+                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link))
+                                        apiArticleVersion = ApiScraper.Run(articleVersion.Id, article.Link);
                                 }
                                 catch (Exception ex)
                                 {
@@ -690,6 +699,7 @@ namespace AutotraderScraper
                                 if (dbArticle == null)
                                 {
                                     article.VirtualArticleVersions.Add(articleVersion);
+                                    article.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
                                     _articleList.Add(article);
                                     _articleLinksList.Add(link);
                                 }
@@ -698,6 +708,7 @@ namespace AutotraderScraper
                                     // Remove article from list and add back with newly attached article version.
                                     _articleList.Remove(dbArticle);
                                     dbArticle.VirtualArticleVersions.Add(articleVersion);
+                                    dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
                                     _articleList.Add(dbArticle);
                                 }
 
