@@ -569,6 +569,7 @@ namespace AutotraderScraper
                                         // If there's no API article versions, let's see if we can find scrape one.
                                         try
                                         {
+                                            if (dbArticleVersion.Id < 1 || String.IsNullOrWhiteSpace(dbArticle.Link)) throw new Exception("Article version id or article link missing.");
                                             if (dbApiArticleVersionCount < 1) ApiScraper.Run(dbArticleVersion, dbArticle.Link);
                                         }
                                         catch (Exception ex)
@@ -670,6 +671,7 @@ namespace AutotraderScraper
                                 // Now scrape API.
                                 try
                                 {
+                                    if (articleVersion.Id < 1 || String.IsNullOrWhiteSpace(article.Link)) throw new Exception("Article version id or article link missing.");
                                     ApiScraper.Run(articleVersion, article.Link);
                                 }
                                 catch (Exception ex)

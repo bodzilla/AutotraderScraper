@@ -107,7 +107,7 @@ namespace AutotraderScraper
                 var autotraderResponse = JToken.Parse(autotraderData).ToObject<AutotraderResponse>();
 
                 // Call MOT API.
-                if (autotraderResponse?.Vehicle?.Vrm != null)
+                if (!String.IsNullOrWhiteSpace(autotraderResponse?.Vehicle?.Vrm))
                 {
                     string url = $"{ApiHistoryUrl}{autotraderResponse.Vehicle.Vrm}";
                     string motDataString = Proxy.MakeApiRequest(url);
@@ -134,9 +134,13 @@ namespace AutotraderScraper
                             if (rfrAndComments == null) continue;
                             foreach (RfrAndComment rfrAndComment in rfrAndComments)
                             {
+                                // Clean up some text.
+                                if (!String.IsNullOrWhiteSpace(rfrAndComment.Text))
+                                {
+                                    rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
+                                    rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
+                                }
                                 rfrAndComment.MotTestId = motTest.Id;
-                                rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
-                                rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
                                 RfrAndCommentRepo.Create(rfrAndComment);
                             }
                         }
@@ -166,18 +170,18 @@ namespace AutotraderScraper
                     advert.VirtualImageUrls = null;
                     advert.SocialMediaLinksId = socialMediaLinks?.Id;
                     advert.InstantMessagingId = instantMessaging?.Id;
-                    if (advert.MainImageUrl != null) advert.MainImageUrl = ImageResizeFind.Replace(advert.MainImageUrl, ImageResizeReplace);
+                    if (!String.IsNullOrWhiteSpace(advert.MainImageUrl)) advert.MainImageUrl = ImageResizeFind.Replace(advert.MainImageUrl, ImageResizeReplace);
                     AdvertRepo.Create(advert);
 
                     if (autotraderResponse.Advert.ImageUrls?.Count > 0)
                     {
                         foreach (string advertImageUrl in autotraderResponse.Advert.ImageUrls)
                         {
-                            string imageUrl = ImageResizeFind.Replace(advertImageUrl, ImageResizeReplace);
+                            String url = !String.IsNullOrWhiteSpace(advertImageUrl) ? ImageResizeFind.Replace(advertImageUrl, ImageResizeReplace) : advertImageUrl;
                             ImageUrlsRepo.Create(new ImageUrls
                             {
                                 AdvertId = advert.Id,
-                                Url = imageUrl
+                                Url = url
                             });
                         }
                     }
@@ -200,12 +204,8 @@ namespace AutotraderScraper
                 Seller seller = autotraderResponse.Seller;
                 if (seller != null)
                 {
-                    if (!String.IsNullOrWhiteSpace(autotraderResponse.Seller.ProfileUrl))
-                    {
-                        autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl
-                            .Insert(0, "https://www.autotrader.co.uk");
-                    }
-                    if (seller.BannerUrl != null && seller.BannerUrl.Contains("images/null")) seller.BannerUrl = null;
+                    if (!String.IsNullOrWhiteSpace(autotraderResponse.Seller.ProfileUrl)) autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl.Insert(0, "https://www.autotrader.co.uk");
+                    if (!String.IsNullOrWhiteSpace(seller.BannerUrl) && seller.BannerUrl.Contains("images/null")) seller.BannerUrl = null;
                     SellerRepo.Create(seller);
                 }
 
@@ -260,7 +260,7 @@ namespace AutotraderScraper
             catch (Exception ex)
             {
                 if (!ex.Message.Contains("404")) throw;
-                Log.Warn("Could not save API article due to error that is not a 404.", ex);
+                Log.Error("Could not save API article due to error that is not a 404.", ex);
             }
         }
     }
