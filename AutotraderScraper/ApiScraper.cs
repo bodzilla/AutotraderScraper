@@ -207,7 +207,7 @@ namespace AutotraderScraper
                 {
                     if (!String.IsNullOrWhiteSpace(autotraderResponse.Seller.ProfileUrl)) autotraderResponse.Seller.ProfileUrl = autotraderResponse.Seller.ProfileUrl.Insert(0, "https://www.autotrader.co.uk");
                     if (!String.IsNullOrWhiteSpace(seller.BannerUrl) && seller.BannerUrl.Contains("images/null")) seller.BannerUrl = null;
-                    if (!String.IsNullOrWhiteSpace(seller.TownAndDistance)) seller.TownAndDistance = DefaultLocation;
+                    if (String.IsNullOrWhiteSpace(seller.TownAndDistance)) seller.TownAndDistance = DefaultLocation;
                     SellerRepo.Create(seller);
                 }
 
