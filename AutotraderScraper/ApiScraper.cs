@@ -26,6 +26,7 @@ namespace AutotraderScraper
         private static readonly string ApiHistoryUrl;
         private static readonly string AutoTraderApiEndPoint;
         private static readonly Regex RemoveNonNumeric;
+        private static readonly Regex RemoveMultipleSpaces;
         private static readonly Regex ImageResizeFind;
         private static readonly string ImageResizeReplace;
         private static readonly string DefaultLocation;
@@ -61,6 +62,7 @@ namespace AutotraderScraper
             ApiHistoryUrl = ConfigurationManager.AppSettings["ApiMotHistoryUrl"];
             AutoTraderApiEndPoint = ConfigurationManager.AppSettings["ApiAutotraderEndPoint"];
             RemoveNonNumeric = new Regex(@"[^\d]");
+            RemoveMultipleSpaces = new Regex(@"\s+");
             ImageResizeFind = new Regex(ConfigurationManager.AppSettings["AutotraderImageResizeRegexFind"]);
             ImageResizeReplace = ConfigurationManager.AppSettings["AutotraderImageResizeRegexReplace"];
             DefaultLocation = ConfigurationManager.AppSettings["DefaultLocation"];
@@ -139,7 +141,7 @@ namespace AutotraderScraper
                                 // Clean up some text.
                                 if (!String.IsNullOrWhiteSpace(rfrAndComment.Text))
                                 {
-                                    rfrAndComment.Text = rfrAndComment.Text.Replace("  ", " "); // Clean up double spaces.
+                                    rfrAndComment.Text = RemoveMultipleSpaces.Replace(rfrAndComment.Text, " "); // Clean up double spaces.
                                     rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
                                 }
                                 rfrAndComment.MotTestId = motTest.Id;
@@ -264,7 +266,7 @@ namespace AutotraderScraper
             catch (Exception ex)
             {
                 if (!ex.Message.Contains("404")) throw;
-                Log.Error("Could not save API article due to error that is not a 404.", ex);
+                Log.Error("Could not save API article version due to error that is not a 404.", ex);
             }
             return apiArticleVersion;
         }

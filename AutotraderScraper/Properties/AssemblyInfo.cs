@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("AutotraderScraperV2")]
-[assembly: AssemblyCopyright("Copyright bodzilla ©  2019")]
+[assembly: AssemblyCopyright("Copyright bodzilla © 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
@@ -33,5 +33,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("4.0.6.0")]
-[assembly: AssemblyFileVersion("4.0.6.0")]
+[assembly: AssemblyVersion("4.0.7.0")]
+[assembly: AssemblyFileVersion("4.0.7.0")]

@@ -712,7 +712,7 @@ namespace AutotraderScraper
                                     _articleList.Add(dbArticle);
                                 }
 
-                                _log.Info($"Saved new article version with {articleState} article and new API article.");
+                                _log.Info($"Saved new article version with {articleState} article and new API article version.");
                             }
                             catch (Exception ex)
                             {
