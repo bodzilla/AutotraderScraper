@@ -89,7 +89,7 @@ namespace AutotraderScraper
         public static ApiArticleVersion Run(int articleVersionId, string link)
         {
             ApiArticleVersion apiArticleVersion = null;
-            MotResponse motResponse = new MotResponse();
+            MotResponse motResponse = null;
 
             try
             {
@@ -122,30 +122,33 @@ namespace AutotraderScraper
                     }
 
                     // Save MOT response.
-                    IList<MotTest> motTests = motResponse.VirtualMotTests?.ToList();
-                    motResponse.VirtualMotTests = null;
-                    MotRepo.Create(motResponse);
-
-                    if (motTests != null)
+                    if (motResponse != null)
                     {
-                        foreach (MotTest motTest in motTests)
-                        {
-                            IList<RfrAndComment> rfrAndComments = motTest.VirtualRfrAndComments?.ToList();
-                            motTest.VirtualRfrAndComments = null;
-                            motTest.MotResponseId = motResponse.Id;
-                            MotTestRepo.Create(motTest);
+                        IList<MotTest> motTests = motResponse.VirtualMotTests?.ToList();
+                        motResponse.VirtualMotTests = null;
+                        MotRepo.Create(motResponse);
 
-                            if (rfrAndComments == null) continue;
-                            foreach (RfrAndComment rfrAndComment in rfrAndComments)
+                        if (motTests != null)
+                        {
+                            foreach (MotTest motTest in motTests)
                             {
-                                // Clean up some text.
-                                if (!String.IsNullOrWhiteSpace(rfrAndComment.Text))
+                                IList<RfrAndComment> rfrAndComments = motTest.VirtualRfrAndComments?.ToList();
+                                motTest.VirtualRfrAndComments = null;
+                                motTest.MotResponseId = motResponse.Id;
+                                MotTestRepo.Create(motTest);
+
+                                if (rfrAndComments == null) continue;
+                                foreach (RfrAndComment rfrAndComment in rfrAndComments)
                                 {
-                                    rfrAndComment.Text = RemoveMultipleSpaces.Replace(rfrAndComment.Text, " "); // Clean up double spaces.
-                                    rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
+                                    // Clean up some text.
+                                    if (!String.IsNullOrWhiteSpace(rfrAndComment.Text))
+                                    {
+                                        rfrAndComment.Text = RemoveMultipleSpaces.Replace(rfrAndComment.Text, " "); // Clean up double spaces.
+                                        rfrAndComment.Text = rfrAndComment.Text.Replace("()", String.Empty); // Clean up empty brackets.
+                                    }
+                                    rfrAndComment.MotTestId = motTest.Id;
+                                    RfrAndCommentRepo.Create(rfrAndComment);
                                 }
-                                rfrAndComment.MotTestId = motTest.Id;
-                                RfrAndCommentRepo.Create(rfrAndComment);
                             }
                         }
                     }
