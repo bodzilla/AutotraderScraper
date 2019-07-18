@@ -770,10 +770,10 @@ namespace AutotraderScraper
             {
                 try
                 {
-                    // Case sensitive.
-                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCulture));
+                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCultureIgnoreCase));
 
-                    if (dealer != null) return dealer;
+                    // Check if it really is the same dealer by checking the logo since some dealer's have the same names despite case ignore.
+                    if (dealer != null && dealerLogo.Equals(dealer.Logo)) return dealer;
                     dealer = new Dealer
                     {
                         Name = dealerName,
