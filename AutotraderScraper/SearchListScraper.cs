@@ -153,14 +153,14 @@ namespace AutotraderScraper
                                 // Parse response as HTML document.
                                 HtmlDocument doc = new HtmlDocument();
                                 doc.LoadHtml(data);
-                                results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
-                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]")?.InnerText.Trim();
+                                results = doc.DocumentNode.SelectNodes(@"//*[@class=""search-page__results""]/li");
+                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@class=""search-page__results""]/li")?.InnerText.Trim();
 
                                 // Check here also to stop same proxy loop.
                                 if (results == null && String.IsNullOrWhiteSpace(noResults)) Proxy.Next();
                             }
 
-                            if (results == null && !String.IsNullOrWhiteSpace(noResults))
+                            if (results == null && !String.IsNullOrWhiteSpace(noResults) || results[0].InnerHtml.Contains("There are no results for this search"))
                             {
                                 _log.Info("Skipping this page as no articles exist.");
                                 continue;
@@ -181,7 +181,7 @@ namespace AutotraderScraper
 
                         foreach (HtmlNode result in results)
                         {
-                            string path = result.XPath;
+                            string path = $"{result.XPath}/article";
                             string price;
                             string link;
                             string location;
@@ -206,7 +206,15 @@ namespace AutotraderScraper
 
                             try
                             {
-                                price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                try
+                                {
+                                    price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                }
+                                catch (Exception)
+                                {
+                                    continue;
+                                }
+
                                 if (String.IsNullOrWhiteSpace(price)) continue; // If price doesn't exist, this article has expired.
 
                                 // Get article values, split at '?' to remove excess trailing from url.
@@ -345,15 +353,12 @@ namespace AutotraderScraper
                                         if (_transmissionTypesList.Any(x => x.Equals(attribute)))
                                         {
                                             transmissionType = attribute;
-                                            continue;
                                         }
-
-                                        throw new Exception($"No attribute matches found for value: {attribute}");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not scrape attribute field(s).", ex);
+                                    _log.Warn("Could not scrape attribute field(s).", ex);
                                     continue;
                                 }
                             }
@@ -773,14 +778,14 @@ namespace AutotraderScraper
                     dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCultureIgnoreCase));
 
                     // Check if it really is the same dealer by checking the logo since some dealer's have the same names despite case ignore.
-                    if (dealer != null && dealerLogo.Equals(dealer.Logo)) return dealer;
-                    dealer = new Dealer
+                    if (dealer != null)
                     {
-                        Name = dealerName,
-                        Logo = dealerLogo
-                    };
-                    _dealerRepo.Create(dealer);
-                    DealerList.Add(dealer);
+                        if (dealerLogo.Equals(dealer.Logo)) return dealer;
+                        dealer.Logo = dealerLogo;
+                        _dealerRepo.Update(dealer);
+                        DealerList.RemoveWhere(x => x.Name.Equals(dealerName, StringComparison.CurrentCultureIgnoreCase));
+                        DealerList.Add(dealer);
+                    }
                 }
                 catch (Exception ex)
                 {
