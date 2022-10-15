@@ -14,16 +14,21 @@ namespace AutotraderScraper
     {
         private static readonly ILog Log;
         private static readonly Stack<string> ProxyList;
-        private static readonly bool UseProxy;
+        private static readonly IList<string> UserAgents;
         private static string _ip;
         private static int? _port;
+
+        private static readonly string ApiKey;
 
         static Proxy()
         {
             Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            UseProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxy"]);
+            var useProxyScraper = bool.Parse(ConfigurationManager.AppSettings["UseProxyScraper"]);
+            ApiKey = ConfigurationManager.AppSettings["ApiMotKey"];
+            UserAgents = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("UserAgent")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             ProxyList = new Stack<string>();
-            if (!UseProxy) return;
+
+            if (!useProxyScraper) return;
 
             // Get IP for proxy to use for calls.
             Log.Info("Retrieving proxy list from web..");
@@ -32,7 +37,7 @@ namespace AutotraderScraper
             string proxyUrl = ConfigurationManager.AppSettings["ProxyUrl"];
             int timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(proxyUrl);
-            request.UserAgent = ConfigurationManager.AppSettings["UserAgent"];
+            request.UserAgent = SetUserAgent(true);
             request.Timeout = timeout;
 
             // Web request response will be read into this variable.
@@ -43,7 +48,7 @@ namespace AutotraderScraper
                 {
                     using (Stream stream = response.GetResponseStream())
                     {
-                        using (StreamReader reader = new StreamReader(stream))
+                        using (StreamReader reader = new StreamReader(stream ?? throw new InvalidOperationException("Proxy list empty.")))
                         {
                             data = reader.ReadToEnd();
                         }
@@ -69,10 +74,10 @@ namespace AutotraderScraper
             ProxyList = new Stack<string>(Shuffle(proxies));
         }
 
-        public static string MakeRequest(string url)
+        public static string MakeWebRequest(string url, bool useProxy, bool isWebScraper)
         {
             string data = String.Empty;
-            if (UseProxy)
+            if (useProxy)
             {
                 if (ProxyList.Count < 1) throw new Exception("Proxy list has been exhuasted with no successes.");
 
@@ -81,8 +86,8 @@ namespace AutotraderScraper
                 {
                     try
                     {
-                        data = DownloadString(url);
-                        if (String.IsNullOrWhiteSpace(data)) Next();
+                        data = DownloadString(url, true, isWebScraper);
+                        if (String.IsNullOrWhiteSpace(data) || data.Contains("Please update your Google Chrome for the best experience")) Next();
                     }
                     catch (Exception)
                     {
@@ -93,22 +98,57 @@ namespace AutotraderScraper
             }
             else
             {
-                data = DownloadString(url);
+                data = DownloadString(url, false, isWebScraper);
                 if (String.IsNullOrEmpty(data)) throw new Exception("Request returned a null response, IP is possibly blocked.");
             }
             return data;
         }
 
-        private static string DownloadString(string url)
+        public static string MakeApiRequest(string url)
+        {
+            string motData = String.Empty;
+
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
+                request.ReadWriteTimeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
+                request.Method = "GET";
+                request.ContentType = @"application/json";
+                request.Headers.Add(@"x-api-key", ApiKey);
+
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+                    using (Stream stream = response.GetResponseStream())
+                    {
+                        using (StreamReader reader =
+                            new StreamReader(stream ?? throw new InvalidOperationException("Stream returns null.")))
+                        {
+                            motData = reader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("The server committed a protocol violation"))
+                {
+                    MakeApiRequest(url);
+                }
+            }
+            return motData;
+        }
+
+        private static string DownloadString(string url, bool useProxy, bool isWebScraper)
         {
             string data;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = ConfigurationManager.AppSettings["UserAgent"];
+            request.UserAgent = SetUserAgent(isWebScraper);
             request.Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
             request.ReadWriteTimeout = int.Parse(ConfigurationManager.AppSettings["TimeoutMilliSecs"]);
             request.Method = "GET";
 
-            if (UseProxy)
+            if (useProxy)
             {
                 // If IP and port are not populated, then use the next in the list.
                 if (String.IsNullOrEmpty(_ip) && _port == null) Next();
@@ -132,7 +172,7 @@ namespace AutotraderScraper
             return data;
         }
 
-        private static void Next()
+        public static void Next()
         {
             string ipAndPort = ProxyList.Pop();
             _ip = ipAndPort.Split(':')[0];
@@ -153,5 +193,7 @@ namespace AutotraderScraper
             }
             return list;
         }
+
+        private static string SetUserAgent(bool isWebScraper) => isWebScraper ? UserAgents[0] : UserAgents[new Random().Next(UserAgents.Count)];
     }
 }

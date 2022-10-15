@@ -44,22 +44,5 @@ namespace AutotraderScraper.Model
         public virtual CarModel VirtualCarModel { get; set; }
 
         public virtual ICollection<ArticleVersion> VirtualArticleVersions { get; set; }
-
-        public override string ToString()
-        {
-            string str = String.Empty;
-            str += $"Id: {Id}{Environment.NewLine}";
-            str += $"DateAdded: {DateAdded}{Environment.NewLine}";
-            str += $"DateEnded: {DateEnded}{Environment.NewLine}";
-            str += $"Active: {Active}{Environment.NewLine}";
-            str += $"PriceTag: {PriceTag}{Environment.NewLine}";
-            str += $"TagLine: {TagLine}{Environment.NewLine}";
-            str += $"Link: {Link}{Environment.NewLine}";
-            str += $"Thumbnail: {Thumbnail}{Environment.NewLine}";
-            str += $"MediaCount: {MediaCount}{Environment.NewLine}";
-            str += $"DealerId: {DealerId}{Environment.NewLine}";
-            str += $"CarModelId: {CarModelId}";
-            return str;
-        }
     }
 }

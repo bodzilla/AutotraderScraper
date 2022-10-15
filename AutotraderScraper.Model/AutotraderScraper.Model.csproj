@@ -41,6 +41,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -52,6 +55,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\ApiArticleVersion.cs" />
+    <Compile Include="Api\Autotrader\Advert.cs" />
+    <Compile Include="Api\Autotrader\AutotraderResponse.cs" />
+    <Compile Include="Api\Autotrader\Finance.cs" />
+    <Compile Include="Api\Autotrader\ImageUrls.cs" />
+    <Compile Include="Api\Autotrader\InstantMessaging.cs" />
+    <Compile Include="Api\Autotrader\KeyFacts.cs" />
+    <Compile Include="Api\Autotrader\Metadatum.cs" />
+    <Compile Include="Api\Autotrader\Ods.cs" />
+    <Compile Include="Api\Autotrader\PageData.cs" />
+    <Compile Include="Api\Autotrader\Preferences.cs" />
+    <Compile Include="Api\Autotrader\Seller.cs" />
+    <Compile Include="Api\Autotrader\SocialMediaLinks.cs" />
+    <Compile Include="Api\Autotrader\Tracking.cs" />
+    <Compile Include="Api\Autotrader\Vehicle.cs" />
+    <Compile Include="Api\Mot\MotResponse.cs" />
+    <Compile Include="Api\Mot\MotTest.cs" />
+    <Compile Include="Api\Mot\RfrAndComment.cs" />
     <Compile Include="Article.cs" />
     <Compile Include="ArticleVersion.cs" />
     <Compile Include="Attributes\CaseSensitiveAttribute.cs" />
@@ -64,5 +85,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

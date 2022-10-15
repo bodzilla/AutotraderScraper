@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using AutotraderScraper.Model;
+using AutotraderScraper.Model.Api;
 using AutotraderScraper.Repository;
 using HtmlAgilityPack;
 using log4net;
@@ -31,9 +32,11 @@ namespace AutotraderScraper
         private readonly IList<string> _transmissionTypesList;
         private readonly HashSet<Article> _articleList;
         private readonly HashSet<string> _articleLinksList;
+        private readonly bool _useProxy;
         private readonly bool _useSleep;
         private readonly int _sleepMin;
         private readonly int _sleepMax;
+        private readonly string _defaultLocation;
         private readonly bool _useRandomPostCode;
         private readonly string _noImageLink;
         private readonly Regex _replacePostCode;
@@ -67,9 +70,11 @@ namespace AutotraderScraper
             _dealerCountVideo = new Regex("Video");
 
             // Load settings.
-            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
+            _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxyScraper"]);
+            _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleepScraper"]);
             _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
             _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
+            _defaultLocation = ConfigurationManager.AppSettings["DefaultLocation"];
             _useRandomPostCode = bool.Parse(ConfigurationManager.AppSettings["UseRandomPostCode"]);
             _postCodes = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("PstCde")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
             _bodyTypesList = ConfigurationManager.AppSettings.AllKeys.Where(key => key.Contains("BodyType")).Select(key => ConfigurationManager.AppSettings[key]).ToList();
@@ -101,7 +106,7 @@ namespace AutotraderScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions, x => x.VirtualDealer));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions, x => x.VirtualDealer, x => x.VirtualArticleVersions.Select(y => y.VirtualApiArticleVersions)));
                 _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId).Select(x => x.Link));
                 if (DealerList.Count < 1) DealerList.UnionWith(_dealerRepo.GetAll(x => x.VirtualArticles));
 
@@ -143,16 +148,19 @@ namespace AutotraderScraper
                             // Ensure results are populated after web request.
                             while (results == null && String.IsNullOrWhiteSpace(noResults))
                             {
-                                data = Proxy.MakeRequest(currentPage);
+                                data = Proxy.MakeWebRequest(currentPage, _useProxy, false);
 
                                 // Parse response as HTML document.
                                 HtmlDocument doc = new HtmlDocument();
                                 doc.LoadHtml(data);
-                                results = doc.DocumentNode.SelectNodes(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__result""]/article");
-                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@id=""main-content""]/div[1]/ul/li[""search-page__noresults""]").InnerText.Trim();
+                                results = doc.DocumentNode.SelectNodes(@"//*[@class=""search-page__results""]/li");
+                                noResults = doc.DocumentNode.SelectSingleNode(@"//*[@class=""search-page__results""]/li")?.InnerText.Trim();
+
+                                // Check here also to stop same proxy loop.
+                                if (results == null && String.IsNullOrWhiteSpace(noResults)) Proxy.Next();
                             }
 
-                            if (results == null && !String.IsNullOrWhiteSpace(noResults))
+                            if (results == null && !String.IsNullOrWhiteSpace(noResults) || results[0].InnerHtml.Contains("There are no results for this search"))
                             {
                                 _log.Info("Skipping this page as no articles exist.");
                                 continue;
@@ -173,7 +181,7 @@ namespace AutotraderScraper
 
                         foreach (HtmlNode result in results)
                         {
-                            string path = result.XPath;
+                            string path = $"{result.XPath}/article";
                             string price;
                             string link;
                             string location;
@@ -198,7 +206,15 @@ namespace AutotraderScraper
 
                             try
                             {
-                                price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                try
+                                {
+                                    price = result.SelectSingleNode($"{path}/section[2]/a/div").InnerText.Trim();
+                                }
+                                catch (Exception)
+                                {
+                                    continue;
+                                }
+
                                 if (String.IsNullOrWhiteSpace(price)) continue; // If price doesn't exist, this article has expired.
 
                                 // Get article values, split at '?' to remove excess trailing from url.
@@ -213,7 +229,7 @@ namespace AutotraderScraper
                                 }
                                 catch (Exception)
                                 {
-                                    location = ConfigurationManager.AppSettings["DefaultLocation"];
+                                    location = _defaultLocation;
                                 }
 
                                 try
@@ -337,15 +353,12 @@ namespace AutotraderScraper
                                         if (_transmissionTypesList.Any(x => x.Equals(attribute)))
                                         {
                                             transmissionType = attribute;
-                                            continue;
                                         }
-
-                                        throw new Exception($"No attribute matches found for value: {attribute}");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not scrape attribute field(s).", ex);
+                                    _log.Warn("Could not scrape attribute field(s).", ex);
                                     continue;
                                 }
                             }
@@ -409,12 +422,15 @@ namespace AutotraderScraper
 
                             if (articleLinkExists)
                             {
+                                int dbApiArticleVersionCount;
+
                                 try
                                 {
                                     // Set existing article and latest article version.
                                     dbArticle = _articleList.Single(x => x.Link == link);
                                     dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
                                     dbDealer = dbArticle.VirtualDealer;
+                                    dbApiArticleVersionCount = dbArticleVersion?.VirtualApiArticleVersions.Count ?? 0;
                                 }
                                 catch (Exception)
                                 {
@@ -558,7 +574,29 @@ namespace AutotraderScraper
                                     // Check if the hashes are a match, if so then skip.
                                     if (String.Equals(dbHash, hash))
                                     {
-                                        _log.Info("Skipped duplicate article.");
+                                        // If there's no API article versions, let's see if we can find scrape one.
+                                        try
+                                        {
+                                            if (dbArticleVersion != null && dbArticleVersion.Id > 0 && !String.IsNullOrWhiteSpace(dbArticle.Link) && dbApiArticleVersionCount < 1)
+                                            {
+                                                ApiArticleVersion apiArticleVersion = ApiScraper.Run(dbArticleVersion.Id, dbArticle.Link);
+
+                                                // Remove and add the article again with the new API article version.
+                                                _articleList.Remove(dbArticle);
+                                                dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
+                                                _articleList.Add(dbArticle);
+
+                                                _log.Info("Saved new API article version with existing article version.");
+                                            }
+                                            else
+                                            {
+                                                _log.Info("Skipped duplicate article.");
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _log.Error("Failed to save API article version for existing article version.", ex);
+                                        }
                                         continue;
                                     }
 
@@ -650,10 +688,23 @@ namespace AutotraderScraper
                                 articleVersion.Updates = updates;
                                 _articleVersionRepo.Create(articleVersion);
 
+                                // Now scrape API.
+                                ApiArticleVersion apiArticleVersion = new ApiArticleVersion();
+                                try
+                                {
+                                    if (articleVersion != null && articleVersion.Id > 0 && !String.IsNullOrWhiteSpace(article.Link))
+                                        apiArticleVersion = ApiScraper.Run(articleVersion.Id, article.Link);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _log.Error("Failed to save API article version for new article version.", ex);
+                                }
+
                                 // Add to hash sets.
                                 if (dbArticle == null)
                                 {
                                     article.VirtualArticleVersions.Add(articleVersion);
+                                    article.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
                                     _articleList.Add(article);
                                     _articleLinksList.Add(link);
                                 }
@@ -662,10 +713,11 @@ namespace AutotraderScraper
                                     // Remove article from list and add back with newly attached article version.
                                     _articleList.Remove(dbArticle);
                                     dbArticle.VirtualArticleVersions.Add(articleVersion);
+                                    dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First().VirtualApiArticleVersions.Add(apiArticleVersion);
                                     _articleList.Add(dbArticle);
                                 }
 
-                                _log.Info($"Saved new article version with {articleState} article.");
+                                _log.Info($"Saved new article version with {articleState} article and new API article version.");
                             }
                             catch (Exception ex)
                             {
@@ -723,17 +775,17 @@ namespace AutotraderScraper
             {
                 try
                 {
-                    // Case sensitive.
-                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCulture));
+                    dealer = DealerList.SingleOrDefault(x => x.Name.Equals(dealerName, StringComparison.CurrentCultureIgnoreCase));
 
-                    if (dealer != null) return dealer;
-                    dealer = new Dealer
+                    // Check if it really is the same dealer by checking the logo since some dealer's have the same names despite case ignore.
+                    if (dealer != null)
                     {
-                        Name = dealerName,
-                        Logo = dealerLogo
-                    };
-                    _dealerRepo.Create(dealer);
-                    DealerList.Add(dealer);
+                        if (dealerLogo.Equals(dealer.Logo)) return dealer;
+                        dealer.Logo = dealerLogo;
+                        _dealerRepo.Update(dealer);
+                        DealerList.RemoveWhere(x => x.Name.Equals(dealerName, StringComparison.CurrentCultureIgnoreCase));
+                        DealerList.Add(dealer);
+                    }
                 }
                 catch (Exception ex)
                 {
